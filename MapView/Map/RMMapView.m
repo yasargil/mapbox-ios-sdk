@@ -1443,7 +1443,7 @@
 
         if (fabsf(_accumulatedDelta.x) < kZoomRectPixelBuffer && fabsf(_accumulatedDelta.y) < kZoomRectPixelBuffer)
         {
-            [_overlayView moveLayersBy:_accumulatedDelta];
+            [_overlayView moveLayersBy:_accumulatedDelta adjustingFractionalPixels:NO];
             [self performSelector:@selector(correctPositionOfAllAnnotations) withObject:nil afterDelay:0.1];
         }
         else
@@ -2590,7 +2590,7 @@
 
     _accumulatedDelta.x = 0.0;
     _accumulatedDelta.y = 0.0;
-    [_overlayView moveLayersBy:_accumulatedDelta];
+    [_overlayView moveLayersBy:_accumulatedDelta adjustingFractionalPixels:YES];
 
     if (self.quadTree)
     {

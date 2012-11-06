@@ -54,9 +54,13 @@
     [self.layer insertSublayer:aLayer above:sublayer];
 }
 
-- (void)moveLayersBy:(CGPoint)delta
+- (void)moveLayersBy:(CGPoint)delta adjustingFractionalPixels:(BOOL)flag
 {
     [self.layer scrollPoint:CGPointMake(-delta.x, -delta.y)];
+
+    if (flag)
+        for (CALayer *layer in self.layer.sublayers)
+            layer.position = CGPointMake(roundf(layer.position.x), roundf(layer.position.y));
 }
 
 - (CALayer *)overlayHitTest:(CGPoint)point

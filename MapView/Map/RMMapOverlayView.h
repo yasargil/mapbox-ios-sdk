@@ -20,7 +20,7 @@
 - (void)insertSublayer:(CALayer *)aLayer below:(CALayer *)sublayer;
 - (void)insertSublayer:(CALayer *)aLayer above:(CALayer *)sublayer;
 
-- (void)moveLayersBy:(CGPoint)delta;
+- (void)moveLayersBy:(CGPoint)delta adjustingFractionalPixels:(BOOL)flag;
 
 - (CALayer *)overlayHitTest:(CGPoint)point;
 
