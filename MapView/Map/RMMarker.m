@@ -67,6 +67,7 @@
         return nil;
 
     self.contents = (id)[image CGImage];
+    self.contentsScale = image.scale;
     self.bounds = CGRectMake(0, 0, image.size.width, image.size.height);
     self.anchorPoint = _anchorPoint;
 
@@ -138,17 +139,17 @@
                                                (symbolName ? [@"-" stringByAppendingString:symbolName] : @""),
                                                (colorHex   ? [@"+" stringByAppendingString:[colorHex stringByReplacingOccurrencesOfString:@"#" withString:@""]] : @""),
                                                (useRetina  ? @"@2x" : @"")]];
-    
+
     UIImage *image;
     
     NSString *cachePath = [NSString stringWithFormat:@"%@/%@", kCachesPath, [imageURL lastPathComponent]];
     
-    if ((image = [UIImage imageWithContentsOfFile:cachePath]) && image)
+    if ((image = [UIImage imageWithData:[NSData dataWithContentsOfFile:cachePath] scale:(useRetina ? 2.0 : 1.0)]) && image)
         return [self initWithUIImage:image];
     
     [[NSFileManager defaultManager] createFileAtPath:cachePath contents:[NSData dataWithContentsOfURL:imageURL] attributes:nil];
     
-    return [self initWithUIImage:[UIImage imageWithContentsOfFile:cachePath]];
+    return [self initWithUIImage:[UIImage imageWithData:[NSData dataWithContentsOfFile:cachePath] scale:(useRetina ? 2.0 : 1.0)]];
 }
 
 - (void)dealloc
