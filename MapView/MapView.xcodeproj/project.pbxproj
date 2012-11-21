@@ -103,6 +103,8 @@
 		DD4195CA162356900049E6BA /* RMBingSource.m in Sources */ = {isa = PBXBuildFile; fileRef = DD4195C8162356900049E6BA /* RMBingSource.m */; };
 		DD41961F16263E400049E6BA /* libGRMustache5-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DD41961E16263E400049E6BA /* libGRMustache5-iOS.a */; };
 		DD4BE198161CE296003EF677 /* MapBox.h in Headers */ = {isa = PBXBuildFile; fileRef = DD4BE197161CE296003EF677 /* MapBox.h */; };
+		DD5615CD165C481700275C79 /* RMMapnikSource.h in Headers */ = {isa = PBXBuildFile; fileRef = DD5615CB165C481700275C79 /* RMMapnikSource.h */; };
+		DD5615CE165C481700275C79 /* RMMapnikSource.m in Sources */ = {isa = PBXBuildFile; fileRef = DD5615CC165C481700275C79 /* RMMapnikSource.m */; };
 		DD5A200B15CAD09400FE4157 /* GRMustache.h in Headers */ = {isa = PBXBuildFile; fileRef = DD5A200A15CAD09400FE4157 /* GRMustache.h */; };
 		DD5FA1EB15E2B020004EB6C5 /* RMLoadingTileView.h in Headers */ = {isa = PBXBuildFile; fileRef = DD5FA1E915E2B020004EB6C5 /* RMLoadingTileView.h */; };
 		DD5FA1EC15E2B020004EB6C5 /* RMLoadingTileView.m in Sources */ = {isa = PBXBuildFile; fileRef = DD5FA1EA15E2B020004EB6C5 /* RMLoadingTileView.m */; };
@@ -253,6 +255,8 @@
 		DD4195C8162356900049E6BA /* RMBingSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RMBingSource.m; sourceTree = "<group>"; };
 		DD41961E16263E400049E6BA /* libGRMustache5-iOS.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libGRMustache5-iOS.a"; path = "GRMustache/lib/libGRMustache5-iOS.a"; sourceTree = "<group>"; };
 		DD4BE197161CE296003EF677 /* MapBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MapBox.h; sourceTree = "<group>"; };
+		DD5615CB165C481700275C79 /* RMMapnikSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RMMapnikSource.h; sourceTree = "<group>"; };
+		DD5615CC165C481700275C79 /* RMMapnikSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RMMapnikSource.m; sourceTree = "<group>"; };
 		DD5A200A15CAD09400FE4157 /* GRMustache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GRMustache.h; path = GRMustache/include/GRMustache.h; sourceTree = "<group>"; };
 		DD5FA1E915E2B020004EB6C5 /* RMLoadingTileView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RMLoadingTileView.h; sourceTree = "<group>"; };
 		DD5FA1EA15E2B020004EB6C5 /* RMLoadingTileView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RMLoadingTileView.m; sourceTree = "<group>"; };
@@ -351,6 +355,8 @@
 				B83E64EE0E80E73F001663B6 /* RMOpenStreetMapSource.m */,
 				DD4195C7162356900049E6BA /* RMBingSource.h */,
 				DD4195C8162356900049E6BA /* RMBingSource.m */,
+				DD5615CB165C481700275C79 /* RMMapnikSource.h */,
+				DD5615CC165C481700275C79 /* RMMapnikSource.m */,
 			);
 			name = "Map Sources";
 			sourceTree = "<group>";
@@ -688,6 +694,7 @@
 				DDE357F0165223A3001DB842 /* RMShapeAnnotation.h in Headers */,
 				DDE357F416522661001DB842 /* RMPolylineAnnotation.h in Headers */,
 				DDE357F816522CD8001DB842 /* RMPolygonAnnotation.h in Headers */,
+				DD5615CD165C481700275C79 /* RMMapnikSource.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -839,6 +846,7 @@
 				DDE357F1165223A3001DB842 /* RMShapeAnnotation.m in Sources */,
 				DDE357F516522661001DB842 /* RMPolylineAnnotation.m in Sources */,
 				DDE357F916522CD8001DB842 /* RMPolygonAnnotation.m in Sources */,
+				DD5615CE165C481700275C79 /* RMMapnikSource.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
