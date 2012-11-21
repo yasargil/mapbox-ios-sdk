@@ -31,6 +31,14 @@
 #import "RMFractalTileProjection.h"
 #import "RMProjection.h"
 
+@interface RMMapView (RMMapnikSource)
+
+- (RMProjectedRect)projectedRectFromLatitudeLongitudeBounds:(RMSphericalTrapezium)bounds;
+
+@end
+
+#pragma mark -
+
 @interface RMMapnikSource ()
 
 @property (nonatomic, assign) RMMapView *mapView;
@@ -83,9 +91,9 @@
 
     UIImage *image = nil;
 
-    RMSphericalTrapezium bbox = [_mapView latitudeLongitudeBoundingBoxForTile:tile];
+    RMProjectedRect bbox = [_mapView projectedRectFromLatitudeLongitudeBounds:[_mapView latitudeLongitudeBoundingBoxForTile:tile]];
 
-    NSLog(@"Requesting image from Mapnik for tile [%i,%i,%i] (%f,%f,%f,%f)", tile.zoom, tile.x, tile.y, bbox.southWest.latitude, bbox.southWest.longitude, bbox.northEast.latitude, bbox.northEast.longitude);
+    NSLog(@"Requesting image from Mapnik for tile [%i,%i,%i] origin (%f,%f) size (%f x %f)", tile.zoom, tile.x, tile.y, bbox.origin.x, bbox.origin.y, bbox.size.width, bbox.size.height);
 
     // call to Mapnik to assign value to `image`
 
