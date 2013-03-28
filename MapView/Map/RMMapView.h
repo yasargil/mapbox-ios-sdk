@@ -1,7 +1,7 @@
 //
 //  RMMapView.h
 //
-// Copyright (c) 2008-2012, Route-Me Contributors
+// Copyright (c) 2008-2013, Route-Me Contributors
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -49,13 +49,6 @@
 @class RMQuadTree;
 @class RMUserLocation;
 
-// constants for boundingMask
-enum : NSUInteger {
-    RMMapNoMinBound		= 0, // Map can be zoomed out past view limits
-    RMMapMinHeightBound	= 1, // Minimum map height when zooming out restricted to view height
-    RMMapMinWidthBound	= 2  // Minimum map width when zooming out restricted to view width (default)
-};
-
 // constants for the scrollview deceleration mode
 typedef enum : NSUInteger {
     RMMapDecelerationNormal = 0,
@@ -75,7 +68,7 @@ typedef enum : NSUInteger {
 *   A map view sends messages to its delegate regarding the loading of map data and changes in the portion of the map being displayed. The delegate also manages the annotation layers used to highlight points of interest on the map.
 *
 *   The delegate should implement the methods of the RMMapViewDelegate protocol. */
-@property (nonatomic, assign) IBOutlet id <RMMapViewDelegate>delegate;
+@property (nonatomic, weak) IBOutlet id <RMMapViewDelegate>delegate;
 
 #pragma mark - View properties
 
@@ -86,14 +79,14 @@ typedef enum : NSUInteger {
 *   This property controls only user interactions with the map. If you set the value of this property to `NO`, you may still change the map location programmatically.
 *
 *   The default value of this property is `YES`. */
-@property (nonatomic, assign) BOOL enableDragging;
+@property (nonatomic, assign) BOOL draggingEnabled;
 
 /** A Boolean value that determines whether the map view bounces past the edge of content and back again and whether it animates the content scaling when the scaling exceeds the maximum or minimum limits.
 *
 *   If the value of this property is `YES`, the map view bounces when it encounters a boundary of the content or when zooming exceeds either the maximum or minimum limits for scaling. Bouncing visually indicates that scrolling or zooming has reached an edge of the content. If the value is `NO`, scrolling and zooming stop immediately at the content boundary without bouncing.
 *
 *   The default value is `NO`. */
-@property (nonatomic, assign) BOOL enableBouncing;
+@property (nonatomic, assign) BOOL bouncingEnabled;
 
 /** A Boolean value that determines whether double-tap zooms of the map always zoom on the center of the map, or whether they zoom on the center of the double-tap gesture. The default value is `NO`, which zooms on the gesture. */
 @property (nonatomic, assign) BOOL zoomingInPivotsAroundCenter;
@@ -129,10 +122,11 @@ typedef enum : NSUInteger {
 /** Take missing tiles from lower-numbered zoom levels, up to a given number of zoom levels. This can be used in order to increase perceived tile load performance or to allow zooming in beyond levels supported natively by a given tile source. Defaults to 1. */
 @property (nonatomic, assign) NSUInteger missingTilesDepth;
 
-@property (nonatomic, assign) NSUInteger boundingMask;
-
 /** A custom, static view to use behind the map tiles. The default behavior is to use grid imagery that moves with map panning like MapKit. */
-@property (nonatomic, retain) UIView *backgroundView;
+@property (nonatomic, strong) UIView *backgroundView;
+
+/** A custom image to use behind the map tiles. The default behavior is to show the default `backgroundView` and not a static image. */
+- (void)setBackgroundImage:(UIImage *)backgroundImage;
 
 /** A Boolean value indicating whether to draw tile borders and z/x/y numbers on tile images for debugging purposes. Defaults to `NO`. */
 @property (nonatomic, assign) BOOL debugTiles;
@@ -144,6 +138,9 @@ typedef enum : NSUInteger {
 
 /** @name Initializing a Map View */
 
+/** Initialize a map view with a given frame. A default watermarked MapBox map tile source will be used. */
+- (id)initWithFrame:(CGRect)frame;
+
 /** Initialize a map view with a given frame and tile source. 
 *   @param frame The frame with which to initialize the map view. 
 *   @param newTilesource The tile source to use for the map tiles. 
@@ -154,9 +151,9 @@ typedef enum : NSUInteger {
 *   @param frame The map view's frame. 
 *   @param newTilesource A tile source to use for the map tiles. 
 *   @param initialCenterCoordinate The starting map center coordinate.
-*   @param initialZoomLevel The starting map zoom level, clamped to the zoom levels supported by the tile source(s).
-*   @param maxZoomLevel The maximum zoom level allowed by the map view, clamped to the zoom levels supported by the tile source(s).
-*   @param minZoomLevel The minimum zoom level allowed by the map view, clamped to the zoom levels supported by the tile source(s).
+*   @param initialTileSourceZoomLevel The starting map zoom level, clamped to the zoom levels supported by the tile source(s).
+*   @param initialTileSourceMaxZoomLevel The maximum zoom level allowed by the map view, clamped to the zoom levels supported by the tile source(s).
+*   @param initialTileSourceMinZoomLevel The minimum zoom level allowed by the map view, clamped to the zoom levels supported by the tile source(s).
 *   @param backgroundImage A custom background image to use behind the map instead of the default gridded tile background that moves with the map. 
 *   @return An initialized map view, or `nil` if a map view was unable to be initialized. */
 - (id)initWithFrame:(CGRect)frame
@@ -170,6 +167,7 @@ typedef enum : NSUInteger {
 - (void)setFrame:(CGRect)frame;
 
 + (UIImage *)resourceImageNamed:(NSString *)imageName;
++ (NSString *)pathForBundleResourceNamed:(NSString *)name ofType:(NSString *)extension;
 
 #pragma mark - Movement
 
@@ -220,6 +218,17 @@ typedef enum : NSUInteger {
 
 // recenter the map on #boundsRect, expressed in projected meters
 - (void)setProjectedBounds:(RMProjectedRect)boundsRect animated:(BOOL)animated;
+
+/** Set zoom level, optionally with an animation. 
+*   @param newZoom The desired zoom level.
+*   @param animated Whether to animate the map change. */
+- (void)setZoom:(float)newZoom animated:(BOOL)animated;
+
+/** Set both zoom level and center coordinate at the same time, optionally with an animation. 
+*   @param newZoom The desired zoom level. 
+*   @param newCenter The desired center coordinate. 
+*   @param animated Whether to animate the map change. */
+- (void)setZoom:(float)newZoom atCoordinate:(CLLocationCoordinate2D)newCenter animated:(BOOL)animated;
 
 /** Zoom the map by a given factor near a certain point. 
 *   @param zoomFactor The factor by which to zoom the map. 
@@ -290,10 +299,10 @@ typedef enum : NSUInteger {
 /** @name Annotating the Map */
 
 /** The annotations currently added to the map. Includes user location annotations, if any. */
-@property (nonatomic, readonly) NSArray *annotations;
+@property (nonatomic, weak, readonly) NSArray *annotations;
 
 /** The annotations currently visible on the map. May include annotations currently shown in clusters. */
-@property (nonatomic, readonly) NSArray *visibleAnnotations;
+@property (nonatomic, weak, readonly) NSArray *visibleAnnotations;
 
 /** Add an annotation to the map. 
 *   @param annotation The annotation to add. */
@@ -319,16 +328,34 @@ typedef enum : NSUInteger {
 *   @return The screen position of the annotation. */
 - (CGPoint)mapPositionForAnnotation:(RMAnnotation *)annotation;
 
+/** Selects the specified annotation and displays a callout view for it.
+*
+*   If the specified annotation is not onscreen, and therefore does not have an associated annotation layer, this method has no effect.
+*   @param annotation The annotation object to select.
+*   @param animated If `YES`, the callout view is animated into position. */
+- (void)selectAnnotation:(RMAnnotation *)annotation animated:(BOOL)animated;
+
+/** Deselects the specified annotation and hides its callout view.
+*   @param annotation The annotation object to deselect.
+*   @param animated If `YES`, the callout view is animated offscreen. */
+- (void)deselectAnnotation:(RMAnnotation *)annotation animated:(BOOL)animated;
+
+/** The annotation that is currently selected. */
+@property (nonatomic, strong) RMAnnotation *selectedAnnotation;
+
 #pragma mark - TileSources
 
-@property (nonatomic, retain) RMQuadTree *quadTree;
+@property (nonatomic, strong) RMQuadTree *quadTree;
 
 /** @name Configuring Annotation Clustering */
 
 /** Whether to enable clustering of map point annotations. Defaults to `NO`. */
-@property (nonatomic, assign) BOOL enableClustering;
+@property (nonatomic, assign) BOOL clusteringEnabled;
 
-/** Whether to position cluster markers at the weighted center of the points they represent. If `YES`, position clusters in weighted fashion. If `NO`, position them on a rectangular grid. Defaults to `NO`. */
+/** Whether to order markers on the z-axis according to increasing y-position. Defaults to `YES`. */
+@property (nonatomic, assign) BOOL orderMarkersByYPosition;
+
+/** Whether to position cluster markers at the weighted center of the points they represent. If `YES`, position clusters in weighted fashion. If `NO`, position them on a rectangular grid. Defaults to `YES`. */
 @property (nonatomic, assign) BOOL positionClusterMarkersAtTheGravityCenter;
 
 /** Whether to order cluster markers above non-clustered markers. Defaults to `NO`. */
@@ -337,15 +364,15 @@ typedef enum : NSUInteger {
 @property (nonatomic, assign) CGSize clusterMarkerSize;
 @property (nonatomic, assign) CGSize clusterAreaSize;
 
-@property (nonatomic, readonly) RMTileSourcesContainer *tileSourcesContainer;
+@property (nonatomic, weak, readonly) RMTileSourcesContainer *tileSourcesContainer;
 
 /** @name Managing Tile Sources */
 
 /** The first tile source of a map view, ordered from bottom to top. */
-@property (nonatomic, retain) id <RMTileSource> tileSource;
+@property (nonatomic, strong) id <RMTileSource> tileSource;
 
 /** All of the tile sources for a map view, ordered bottom to top. */
-@property (nonatomic, retain) NSArray *tileSources;
+@property (nonatomic, strong) NSArray *tileSources;
 
 /** Add a tile source to a map view above the current tile sources. 
 *   @param tileSource The tile source to add. */
@@ -392,7 +419,7 @@ typedef enum : NSUInteger {
 /** @name Managing Tile Caching Behavior */
 
 /** The tile cache for the map view, typically composed of both an in-memory RMMemoryCache and a disk-based RMDatabaseCache. */
-@property (nonatomic, retain)   RMTileCache *tileCache;
+@property (nonatomic, strong)   RMTileCache *tileCache;
 
 /** Clear all tile images from the caching system. */
 -(void)removeAllCachedImages;
@@ -400,8 +427,8 @@ typedef enum : NSUInteger {
 #pragma mark - Conversions
 
 // projections to convert from latitude/longitude to meters, from projected meters to tile coordinates
-@property (nonatomic, readonly) RMProjection *projection;
-@property (nonatomic, readonly) id <RMMercatorToTileProjection> mercatorToTileProjection;
+@property (nonatomic, weak, readonly) RMProjection *projection;
+@property (nonatomic, weak, readonly) id <RMMercatorToTileProjection> mercatorToTileProjection;
 
 /** @name Converting Map Coordinates */
 

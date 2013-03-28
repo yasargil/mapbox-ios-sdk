@@ -1,7 +1,7 @@
 //
 //  RMMarker.m
 //
-// Copyright (c) 2008-2012, Route-Me Contributors
+// Copyright (c) 2008-2013, Route-Me Contributors
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,9 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #import "RMMarker.h"
+
 #import "RMPixel.h"
+#import "RMConfiguration.h"
 
 @implementation RMMarker
 
@@ -94,7 +96,7 @@
 
 - (id)initWithMapBoxMarkerImage:(NSString *)symbolName tintColor:(UIColor *)color size:(RMMarkerMapBoxImageSize)size
 {
-    NSString *sizeString;
+    NSString *sizeString = nil;
     
     switch (size)
     {
@@ -112,7 +114,7 @@
             break;
     }
     
-    NSString *colorHex;
+    NSString *colorHex = nil;
     
     if (color)
     {
@@ -140,24 +142,23 @@
                                                (colorHex   ? [@"+" stringByAppendingString:[colorHex stringByReplacingOccurrencesOfString:@"#" withString:@""]] : @"+ff0000"),
                                                (useRetina  ? @"@2x" : @"")]];
 
-    UIImage *image;
+    UIImage *image = nil;
     
     NSString *cachePath = [NSString stringWithFormat:@"%@/%@", kCachesPath, [imageURL lastPathComponent]];
     
     if ((image = [UIImage imageWithData:[NSData dataWithContentsOfFile:cachePath] scale:(useRetina ? 2.0 : 1.0)]) && image)
         return [self initWithUIImage:image];
     
-    [[NSFileManager defaultManager] createFileAtPath:cachePath contents:[NSData dataWithContentsOfURL:imageURL] attributes:nil];
+    [[NSFileManager defaultManager] createFileAtPath:cachePath contents:[NSData brandedDataWithContentsOfURL:imageURL] attributes:nil];
     
     return [self initWithUIImage:[UIImage imageWithData:[NSData dataWithContentsOfFile:cachePath] scale:(useRetina ? 2.0 : 1.0)]];
 }
 
-- (void)dealloc
++ (void)clearCachedMapBoxMarkers
 {
-    self.label = nil;
-    self.textForegroundColor = nil;
-    self.textBackgroundColor = nil;
-    [super dealloc];
+    for (NSString *filePath in [[NSFileManager defaultManager] contentsOfDirectoryAtPath:kCachesPath error:nil])
+        if ([[filePath lastPathComponent] hasPrefix:@"pin-"] && [[filePath lastPathComponent] hasSuffix:@".png"])
+            [[NSFileManager defaultManager] removeItemAtPath:[NSString stringWithFormat:@"%@/%@", kCachesPath, filePath] error:nil];
 }
 
 #pragma mark -
@@ -182,30 +183,25 @@
         return;
 
     if (label != nil)
-    {
         [[label layer] removeFromSuperlayer];
-        [label release]; label = nil;
-    }
 
     if (aView != nil)
     {
-        label = [aView retain];
+        label = aView;
         [self addSublayer:[label layer]];
     }
 }
 
 - (void)setTextBackgroundColor:(UIColor *)newTextBackgroundColor
 {
-    [textBackgroundColor autorelease];
-    textBackgroundColor = [newTextBackgroundColor retain];
+    textBackgroundColor = newTextBackgroundColor;
 
     self.label.backgroundColor = textBackgroundColor;
 }
 
 - (void)setTextForegroundColor:(UIColor *)newTextForegroundColor
 {
-    [textForegroundColor autorelease];
-    textForegroundColor = [newTextForegroundColor retain];
+    textForegroundColor = newTextForegroundColor;
 
     if ([self.label respondsToSelector:@selector(setTextColor:)])
         ((UILabel *)self.label).textColor = textForegroundColor;
@@ -243,11 +239,13 @@
     [aLabel setBackgroundColor:backgroundColor];
     [aLabel setTextColor:textColor];
     [aLabel setFont:font];
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
     [aLabel setTextAlignment:UITextAlignmentCenter];
+    #pragma clang diagnostic pop
     [aLabel setText:text];
 
     [self setLabel:aLabel];
-    [aLabel release];
 }
 
 - (void)toggleLabel

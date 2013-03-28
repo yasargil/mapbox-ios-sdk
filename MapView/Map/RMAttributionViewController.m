@@ -45,6 +45,17 @@
         webView.backgroundColor = [UIColor clearColor];
         webView.opaque = NO;
 
+        if ([webView respondsToSelector:@selector(scrollView) ])
+        {
+            webView.scrollView.bounces = NO;
+        }
+        else
+        {
+            for (id subview in webView.subviews)
+                if ([[subview class] isSubclassOfClass:[UIScrollView class]])
+                    ((UIScrollView *)subview).bounces = NO;
+        }
+
         NSMutableString *attribution = [NSMutableString string];
 
         for (id <RMTileSource>tileSource in mapView.tileSources)

@@ -35,12 +35,12 @@
 
 #import "RMMapView.h"
 #import "RMPointAnnotation.h"
+#import "RMConfiguration.h"
 
 @interface RMMapBoxSource ()
 
-@property (nonatomic, retain) NSDictionary *infoDictionary;
-
-- (id)initWithInfo:(NSDictionary *)info;
+@property (nonatomic, strong) NSDictionary *infoDictionary;
+@property (nonatomic, strong) NSString *tileJSON;
 
 @end
 
@@ -48,7 +48,16 @@
 
 @implementation RMMapBoxSource
 
-@synthesize infoDictionary=_infoDictionary, imageQuality=_imageQuality, dataQueue=_dataQueue;
+@synthesize infoDictionary=_infoDictionary, tileJSON=_tileJSON, imageQuality=_imageQuality, dataQueue=_dataQueue;
+
+- (id)init
+{
+    BOOL useRetina = ([[UIScreen mainScreen] scale] > 1.0);
+
+    NSString *localTileJSONPath = [RMMapView pathForBundleResourceNamed:(useRetina ? kMapBoxPlaceholderRetinaMapID : kMapBoxPlaceholderNormalMapID) ofType:@"json"];
+
+    return [self initWithReferenceURL:[NSURL fileURLWithPath:localTileJSONPath]];
+}
 
 - (id)initWithMapID:(NSString *)mapID
 {
@@ -66,11 +75,13 @@
     {
         _dataQueue = dispatch_queue_create(nil, DISPATCH_QUEUE_SERIAL);
 
-        _infoDictionary = (NSDictionary *)[[NSJSONSerialization JSONObjectWithData:[tileJSON dataUsingEncoding:NSUTF8StringEncoding]
-                                                                           options:0
-                                                                             error:nil] retain];
+        _infoDictionary = (NSDictionary *)[NSJSONSerialization JSONObjectWithData:[tileJSON dataUsingEncoding:NSUTF8StringEncoding]
+                                                                          options:0
+                                                                            error:nil];
 
-        id dataObject;
+        _tileJSON = tileJSON;
+
+        id dataObject = nil;
         
         if (mapView && (dataObject = [_infoDictionary objectForKey:@"data"]) && dataObject)
         {
@@ -80,9 +91,9 @@
                 {
                     NSURL *dataURL = [NSURL URLWithString:[dataObject objectAtIndex:0]];
                     
-                    NSMutableString *jsonString;
+                    NSMutableString *jsonString = nil;
                     
-                    if (dataURL && (jsonString = [NSMutableString stringWithContentsOfURL:dataURL encoding:NSUTF8StringEncoding error:nil]) && jsonString)
+                    if (dataURL && (jsonString = [NSMutableString brandedStringWithContentsOfURL:dataURL encoding:NSUTF8StringEncoding error:nil]) && jsonString)
                     {
                         if ([jsonString hasPrefix:@"grid("])
                         {
@@ -90,7 +101,7 @@
                             [jsonString replaceCharactersInRange:NSMakeRange([jsonString length] - 2, 2) withString:@""];
                         }
                         
-                        id jsonObject;
+                        id jsonObject = nil;
                         
                         if ((jsonObject = [NSJSONSerialization JSONObjectWithData:[jsonString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil]) && [jsonObject isKindOfClass:[NSDictionary class]])
                         {
@@ -102,14 +113,19 @@
                                     .longitude = [[[[feature objectForKey:@"geometry"] objectForKey:@"coordinates"] objectAtIndex:0] floatValue],
                                     .latitude  = [[[[feature objectForKey:@"geometry"] objectForKey:@"coordinates"] objectAtIndex:1] floatValue]
                                 };
+
+                                RMAnnotation *annotation = nil;
+
+                                if ([mapView.delegate respondsToSelector:@selector(mapView:layerForAnnotation:)])
+                                    annotation = [RMAnnotation annotationWithMapView:mapView coordinate:coordinate andTitle:[properties objectForKey:@"title"]];
+                                else
+                                    annotation = [RMPointAnnotation annotationWithMapView:mapView coordinate:coordinate andTitle:[properties objectForKey:@"title"]];
                                 
-                                RMPointAnnotation *pointAnnotation = [RMPointAnnotation annotationWithMapView:mapView coordinate:coordinate andTitle:[properties objectForKey:@"title"]];
-                                
-                                pointAnnotation.userInfo = properties;
+                                annotation.userInfo = properties;
                                 
                                 dispatch_async(dispatch_get_main_queue(), ^(void)
                                 {
-                                    [mapView addAnnotation:pointAnnotation];
+                                    [mapView addAnnotation:annotation];
                                 });
                             }
                         }
@@ -122,18 +138,6 @@
     return self;
 }
 
-- (id)initWithInfo:(NSDictionary *)info
-{
-    WarnDeprecated();
-
-    if ( ! (self = [super init]))
-        return nil;
-
-    _infoDictionary = [[NSDictionary dictionaryWithDictionary:info] retain];
-
-	return self;
-}
-
 - (id)initWithReferenceURL:(NSURL *)referenceURL
 {
     return [self initWithReferenceURL:referenceURL enablingDataOnMapView:nil];
@@ -141,7 +145,7 @@
 
 - (id)initWithReferenceURL:(NSURL *)referenceURL enablingDataOnMapView:(RMMapView *)mapView
 {
-    id dataObject;
+    id dataObject = nil;
     
     if ([[referenceURL pathExtension] isEqualToString:@"jsonp"])
         referenceURL = [NSURL URLWithString:[[referenceURL absoluteString] stringByReplacingOccurrencesOfString:@".jsonp" 
@@ -149,28 +153,15 @@
                                                                                                         options:NSAnchoredSearch & NSBackwardsSearch
                                                                                                           range:NSMakeRange(0, [[referenceURL absoluteString] length])]];
     
-    if ([[referenceURL pathExtension] isEqualToString:@"json"] && (dataObject = [NSString stringWithContentsOfURL:referenceURL encoding:NSUTF8StringEncoding error:nil]) && dataObject)
+    if ([[referenceURL pathExtension] isEqualToString:@"json"] && (dataObject = [NSString brandedStringWithContentsOfURL:referenceURL encoding:NSUTF8StringEncoding error:nil]) && dataObject)
         return [self initWithTileJSON:dataObject enablingDataOnMapView:mapView];
     
-    else if ([[referenceURL pathExtension] isEqualToString:@"plist"])
-    {
-        NSMutableDictionary *mutableInfoDictionary = [NSMutableDictionary dictionaryWithContentsOfURL:referenceURL];
-        
-        if (mutableInfoDictionary)
-        {
-            if ( ! [mutableInfoDictionary objectForKey:@"scheme"])
-                [mutableInfoDictionary setObject:@"tms" forKey:@"scheme"]; // assume older plists are TMS, not XYZ per TileJSON default
-        
-            return [self initWithInfo:mutableInfoDictionary];
-        }
-    }
-
     return nil;
 }
 
 - (id)initWithMapID:(NSString *)mapID enablingDataOnMapView:(RMMapView *)mapView
 {
-    NSString *referenceURLString = [NSString stringWithFormat:@"http://a.tiles.mapbox.com/v3/%@.jsonp", mapID];
+    NSString *referenceURLString = [NSString stringWithFormat:@"http://a.tiles.mapbox.com/v3/%@.json", mapID];
 
     return [self initWithReferenceURL:[NSURL URLWithString:referenceURLString] enablingDataOnMapView:mapView];
 }
@@ -178,11 +169,14 @@
 - (void)dealloc
 {
     dispatch_release(_dataQueue);
-    [_infoDictionary release];
-    [super dealloc];
 }
 
 #pragma mark 
+
+- (NSURL *)tileJSONURL
+{
+    return [NSURL URLWithString:[NSString stringWithFormat:@"http://a.tiles.mapbox.com/v3/%@.json", [self.infoDictionary objectForKey:@"id"]]];
+}
 
 - (NSURL *)URLForTile:(RMTile)tile
 {
@@ -193,7 +187,7 @@
     if ([self.infoDictionary objectForKey:@"scheme"] && [[self.infoDictionary objectForKey:@"scheme"] isEqual:@"tms"])
         y = pow(2, zoom) - tile.y - 1;
 
-    NSString *tileURLString;
+    NSString *tileURLString = nil;
 
     if ([self.infoDictionary objectForKey:@"tiles"])
         tileURLString = [[self.infoDictionary objectForKey:@"tiles"] objectAtIndex:0];
@@ -207,7 +201,7 @@
 
     if (_imageQuality != RMMapBoxSourceQualityFull)
     {
-        NSString *qualityExtension;
+        NSString *qualityExtension = nil;
 
         switch (_imageQuality)
         {
@@ -277,7 +271,7 @@
 {
     id bounds = [self.infoDictionary objectForKey:@"bounds"];
 
-    NSArray *parts;
+    NSArray *parts = nil;
 
     if ([bounds isKindOfClass:[NSArray class]])
         parts = bounds;

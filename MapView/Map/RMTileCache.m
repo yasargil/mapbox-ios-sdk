@@ -34,6 +34,8 @@
 #import "RMConfiguration.h"
 #import "RMTileSource.h"
 
+#import "RMTileCacheDownloadOperation.h"
+
 @interface RMTileCache (Configuration)
 
 - (id <RMTileCache>)memoryCacheWithConfig:(NSDictionary *)cfg;
@@ -52,7 +54,12 @@
     NSTimeInterval _expiryPeriod;
 
     dispatch_queue_t _tileCacheQueue;
+    
+    id <RMTileSource>_activeTileSource;
+    NSOperationQueue *_backgroundFetchQueue;
 }
+
+@synthesize backgroundCacheDelegate=_backgroundCacheDelegate;
 
 - (id)initWithExpiryPeriod:(NSTimeInterval)period
 {
@@ -64,6 +71,10 @@
 
     _memoryCache = nil;
     _expiryPeriod = period;
+    
+    _backgroundCacheDelegate = nil;
+    _activeTileSource = nil;
+    _backgroundFetchQueue = nil;
 
     id cacheCfg = [[RMConfiguration configuration] cacheConfiguration];
     if (!cacheCfg)
@@ -82,7 +93,7 @@
 
             if ([@"memory-cache" isEqualToString:type])
             {
-                _memoryCache = [[self memoryCacheWithConfig:cfg] retain];
+                _memoryCache = [self memoryCacheWithConfig:cfg];
                 continue;
             }
 
@@ -113,12 +124,13 @@
 
 - (void)dealloc
 {
+    if (self.isBackgroundCaching)
+        [self cancelBackgroundCache];
+    
     dispatch_barrier_sync(_tileCacheQueue, ^{
-        [_memoryCache release]; _memoryCache = nil;
-        [_tileCaches release]; _tileCaches = nil;
+         _memoryCache = nil;
+         _tileCaches = nil;
     });
-
-	[super dealloc];
 }
 
 - (void)addCache:(id <RMTileCache>)cache
@@ -160,7 +172,7 @@
 
         for (id <RMTileCache> cache in _tileCaches)
         {
-            image = [[cache cachedImage:tile withCacheKey:aCacheKey] retain];
+            image = [cache cachedImage:tile withCacheKey:aCacheKey];
 
             if (image != nil)
             {
@@ -171,7 +183,7 @@
 
     });
 
-	return [image autorelease];
+	return image;
 }
 
 - (void)addImage:(UIImage *)image forTile:(RMTile)tile withCacheKey:(NSString *)aCacheKey
@@ -232,7 +244,129 @@
         {
             [cache removeAllCachedImagesForCacheKey:cacheKey];
         }
+    });
+}
 
+- (BOOL)isBackgroundCaching
+{
+    return (_activeTileSource || _backgroundFetchQueue);
+}
+
+- (void)beginBackgroundCacheForTileSource:(id <RMTileSource>)tileSource southWest:(CLLocationCoordinate2D)southWest northEast:(CLLocationCoordinate2D)northEast minZoom:(float)minZoom maxZoom:(float)maxZoom
+{
+    if (self.isBackgroundCaching)
+        return;
+
+    _activeTileSource = tileSource;
+    
+    _backgroundFetchQueue = [[NSOperationQueue alloc] init];
+    [_backgroundFetchQueue setMaxConcurrentOperationCount:6];
+    
+    int   minCacheZoom = (int)minZoom;
+    int   maxCacheZoom = (int)maxZoom;
+    float minCacheLat  = southWest.latitude;
+    float maxCacheLat  = northEast.latitude;
+    float minCacheLon  = southWest.longitude;
+    float maxCacheLon  = northEast.longitude;
+
+    if (maxCacheZoom < minCacheZoom || maxCacheLat <= minCacheLat || maxCacheLon <= minCacheLon)
+        return;
+
+    int n, xMin, yMax, xMax, yMin;
+
+    int totalTiles = 0;
+
+    for (int zoom = minCacheZoom; zoom <= maxCacheZoom; zoom++)
+    {
+        n = pow(2.0, zoom);
+        xMin = floor(((minCacheLon + 180.0) / 360.0) * n);
+        yMax = floor((1.0 - (logf(tanf(minCacheLat * M_PI / 180.0) + 1.0 / cosf(minCacheLat * M_PI / 180.0)) / M_PI)) / 2.0 * n);
+        xMax = floor(((maxCacheLon + 180.0) / 360.0) * n);
+        yMin = floor((1.0 - (logf(tanf(maxCacheLat * M_PI / 180.0) + 1.0 / cosf(maxCacheLat * M_PI / 180.0)) / M_PI)) / 2.0 * n);
+
+        totalTiles += (xMax + 1 - xMin) * (yMax + 1 - yMin);
+    }
+
+    [_backgroundCacheDelegate tileCache:self didBeginBackgroundCacheWithCount:totalTiles forTileSource:_activeTileSource];
+
+    __block int progTile = 0;
+
+    for (int zoom = minCacheZoom; zoom <= maxCacheZoom; zoom++)
+    {
+        n = pow(2.0, zoom);
+        xMin = floor(((minCacheLon + 180.0) / 360.0) * n);
+        yMax = floor((1.0 - (logf(tanf(minCacheLat * M_PI / 180.0) + 1.0 / cosf(minCacheLat * M_PI / 180.0)) / M_PI)) / 2.0 * n);
+        xMax = floor(((maxCacheLon + 180.0) / 360.0) * n);
+        yMin = floor((1.0 - (logf(tanf(maxCacheLat * M_PI / 180.0) + 1.0 / cosf(maxCacheLat * M_PI / 180.0)) / M_PI)) / 2.0 * n);
+
+        for (int x = xMin; x <= xMax; x++)
+        {
+            for (int y = yMin; y <= yMax; y++)
+            {
+                RMTileCacheDownloadOperation *operation = [[RMTileCacheDownloadOperation alloc] initWithTile:RMTileMake(x, y, zoom)
+                                                                                                forTileSource:_activeTileSource
+                                                                                                   usingCache:self];
+
+                __block RMTileCacheDownloadOperation *internalOperation = operation;
+
+                [operation setCompletionBlock:^(void)
+                {
+                    dispatch_sync(dispatch_get_main_queue(), ^(void)
+                    {
+                        if ( ! [internalOperation isCancelled])
+                        {
+                            progTile++;
+
+                            [_backgroundCacheDelegate tileCache:self didBackgroundCacheTile:RMTileMake(x, y, zoom) withIndex:progTile ofTotalTileCount:totalTiles];
+
+                            if (progTile == totalTiles)
+                            {
+                                 _backgroundFetchQueue = nil;
+
+                                 _activeTileSource = nil;
+
+                                [_backgroundCacheDelegate tileCacheDidFinishBackgroundCache:self];
+                            }
+                        }
+
+                        internalOperation = nil;
+                    });
+                }];
+
+                [_backgroundFetchQueue addOperation:operation];
+            }
+        }
+    };
+}
+
+- (void)cancelBackgroundCache
+{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void)
+    {
+        @synchronized (self)
+        {
+            BOOL didCancel = NO;
+
+            if (_backgroundFetchQueue)
+            {
+                [_backgroundFetchQueue cancelAllOperations];
+                [_backgroundFetchQueue waitUntilAllOperationsAreFinished];
+                 _backgroundFetchQueue = nil;
+
+                didCancel = YES;
+            }
+
+            if (_activeTileSource)
+                 _activeTileSource = nil;
+
+            if (didCancel)
+            {
+                dispatch_sync(dispatch_get_main_queue(), ^(void)
+                {
+                    [_backgroundCacheDelegate tileCacheDidCancelBackgroundCache:self];
+                });
+            }
+        }
     });
 }
 
@@ -317,7 +451,7 @@ static NSMutableDictionary *predicateValues = nil;
 
     RMLog(@"Memory cache configuration: {capacity : %d}", capacity);
 
-	return [[[RMMemoryCache alloc] initWithCapacity:capacity] autorelease];
+	return [[RMMemoryCache alloc] initWithCapacity:capacity];
 }
 
 - (id <RMTileCache>)databaseCacheWithConfig:(NSDictionary *)cfg
@@ -417,7 +551,7 @@ static NSMutableDictionary *predicateValues = nil;
 
     RMLog(@"Database cache configuration: {capacity : %d, strategy : %@, minimalPurge : %d, expiryPeriod: %.0f, useCacheDir : %@}", capacity, strategyStr, minimalPurge, _expiryPeriod, useCacheDir ? @"YES" : @"NO");
 
-    RMDatabaseCache *dbCache = [[[RMDatabaseCache alloc] initUsingCacheDir:useCacheDir] autorelease];
+    RMDatabaseCache *dbCache = [[RMDatabaseCache alloc] initUsingCacheDir:useCacheDir];
     [dbCache setCapacity:capacity];
     [dbCache setPurgeStrategy:strategy];
     [dbCache setMinimalPurge:minimalPurge];

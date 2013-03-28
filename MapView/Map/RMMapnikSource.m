@@ -78,12 +78,6 @@
     return self;
 }
 
-- (void)dealloc
-{
-    [_tileProjection release]; _tileProjection = nil;
-    [super dealloc];
-}
-
 - (UIImage *)imageForTile:(RMTile)tile inCache:(RMTileCache *)tileCache
 {
     if ( ! _mapView)
