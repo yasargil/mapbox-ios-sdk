@@ -80,15 +80,11 @@
 
 - (UIImage *)imageForTile:(RMTile)tile inCache:(RMTileCache *)tileCache
 {
-    UIImage *image = nil;
-
     RMProjectedRect bbox = [_mapView projectedRectFromLatitudeLongitudeBounds:[_mapView latitudeLongitudeBoundingBoxForTile:tile]];
 
     NSLog(@"Requesting image from Mapnik for tile [%i,%i,%i] origin (%f,%f) size (%f x %f)", tile.zoom, tile.x, tile.y, bbox.origin.x, bbox.origin.y, bbox.size.width, bbox.size.height);
 
-    // call to Mapnik to assign value to `image`
-
-    return image;
+    return [self.delegate tileSource:self imageForTile:tile];
 }
 
 - (RMFractalTileProjection *)mercatorToTileProjection

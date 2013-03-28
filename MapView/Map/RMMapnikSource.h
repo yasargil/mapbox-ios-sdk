@@ -30,9 +30,20 @@
 #import "RMTileSource.h"
 
 @class RMMapView;
+@class RMMapnikSource;
+
+@protocol RMMapnikSourceDelegate <NSObject>
+
+- (UIImage *)tileSource:(RMMapnikSource *)tileSource imageForTile:(RMTile)tile;
+
+@end
+
+#pragma mark -
 
 @interface RMMapnikSource : NSObject <RMTileSource>
 
 - (id)initForMapView:(RMMapView *)mapView;
+
+@property (nonatomic, assign) id <RMMapnikSourceDelegate>delegate;
 
 @end
