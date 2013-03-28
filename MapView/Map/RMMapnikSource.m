@@ -42,7 +42,7 @@
 @interface RMMapnikSource ()
 
 @property (nonatomic, assign) RMMapView *mapView;
-@property (nonatomic, retain) RMFractalTileProjection *tileProjection;
+@property (nonatomic, strong) RMFractalTileProjection *tileProjection;
 
 @end
 
