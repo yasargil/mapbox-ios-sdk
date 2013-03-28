@@ -80,9 +80,6 @@
 
 - (UIImage *)imageForTile:(RMTile)tile inCache:(RMTileCache *)tileCache
 {
-    if ( ! _mapView)
-        return [RMMapView resourceImageNamed:@"LoadingTile.png"];
-
     UIImage *image = nil;
 
     RMProjectedRect bbox = [_mapView projectedRectFromLatitudeLongitudeBounds:[_mapView latitudeLongitudeBoundingBoxForTile:tile]];
