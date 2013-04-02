@@ -414,6 +414,8 @@ typedef enum : NSUInteger {
 *   @param index The index of the tile source to reload. */
 - (void)reloadTileSourceAtIndex:(NSUInteger)index;
 
+- (void)reloadTileSourceAtIndex:(NSUInteger)index forRect:(CGRect)rect;
+
 #pragma mark - Cache
 
 /** @name Managing Tile Caching Behavior */

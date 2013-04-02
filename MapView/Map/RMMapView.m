@@ -2158,6 +2158,17 @@
     [tiledLayerView setNeedsDisplay];
 }
 
+- (void)reloadTileSourceAtIndex:(NSUInteger)index forRect:(CGRect)rect
+{
+    if (index >= [_tiledLayersSuperview.subviews count])
+        return;
+
+    // Reload the map layer
+    RMMapTiledLayerView *tiledLayerView = [_tiledLayersSuperview.subviews objectAtIndex:index];
+    //    tiledLayerView.layer.contents = nil;
+    [tiledLayerView setNeedsDisplayInRect:rect];
+}
+
 #pragma mark - Properties
 
 - (UIView *)backgroundView
