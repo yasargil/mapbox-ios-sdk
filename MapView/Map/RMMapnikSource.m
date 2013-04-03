@@ -127,7 +127,7 @@
 
 - (NSUInteger)tileSideLength
 {
-    return 512;
+    return 256;
 }
 
 - (NSString *)shortName
