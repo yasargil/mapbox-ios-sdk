@@ -62,8 +62,8 @@
     if (!(self = [super init]))
         return nil;
 
-    self.minZoom = 0;
-    self.maxZoom = 17;
+    self.minZoom = 9;
+    self.maxZoom = 22;
 
     self.cacheable = NO;
     self.opaque    = YES;
