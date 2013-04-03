@@ -84,6 +84,13 @@
 
 //    NSLog(@"Requesting image from Mapnik for tile [%i,%i,%i] origin (%f,%f) size (%f x %f)", tile.zoom, tile.x, tile.y, bbox.origin.x, bbox.origin.y, bbox.size.width, bbox.size.height);
 
+
+
+    if ([self.delegate respondsToSelector:@selector(tileSource:rawImageForTile:)])
+        return [self.delegate tileSource:self rawImageForTile:tile];
+
+
+
     return [self.delegate tileSource:self imageForTile:tile];
 }
 

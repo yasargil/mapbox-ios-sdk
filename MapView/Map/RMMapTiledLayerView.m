@@ -155,44 +155,45 @@
                 if ([componentCache isKindOfClass:[RMDatabaseCache class]])
                     databaseCache = (RMDatabaseCache *)componentCache;
 
-            if ( ! [_tileSource isKindOfClass:[RMAbstractWebMapSource class]] || ! databaseCache || ! databaseCache.capacity)
-            {
+//            if ( ! [_tileSource isKindOfClass:[RMAbstractWebMapSource class]] || ! databaseCache || ! databaseCache.capacity)
+//            {
                 // for non-web tiles, query the source directly since trivial blocking
                 //
-                tileImage = [_tileSource imageForTile:RMTileMake(x, y, zoom) inCache:[_mapView tileCache]];
-            }
-            else
-            {
-                // for non-local tiles, consult cache directly first (if possible)
-                //
-                if (_tileSource.isCacheable)
-                    tileImage = [[_mapView tileCache] cachedImage:RMTileMake(x, y, zoom) withCacheKey:[_tileSource uniqueTilecacheKey]];
 
-                if ( ! tileImage)
-                {
-                    // fire off an asynchronous retrieval
-                    //
-                    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void)
-                    {
-                        // ensure only one request for a URL at a time
-                        //
-                        @synchronized ([(RMAbstractWebMapSource *)_tileSource URLForTile:RMTileMake(x, y, zoom)])
-                        {
-                            // this will return quicker if cached since above attempt, else block on fetch
-                            //
-                            if (_tileSource.isCacheable && [_tileSource imageForTile:RMTileMake(x, y, zoom) inCache:[_mapView tileCache]])
-                            {
-                                dispatch_async(dispatch_get_main_queue(), ^(void)
-                                {
-                                    // do it all again for this tile, next time synchronously from cache
-                                    //
-                                    [self.layer setNeedsDisplayInRect:rect];
-                                });
-                            }
-                        }
-                    });
-                }
-            }
+            tileImage = [_tileSource imageForTile:RMTileMake(x, y, zoom) inCache:[_mapView tileCache]];
+//            }
+//            else
+//            {
+//                // for non-local tiles, consult cache directly first (if possible)
+//                //
+//                if (_tileSource.isCacheable)
+//                    tileImage = [[_mapView tileCache] cachedImage:RMTileMake(x, y, zoom) withCacheKey:[_tileSource uniqueTilecacheKey]];
+//
+//                if ( ! tileImage)
+//                {
+//                    // fire off an asynchronous retrieval
+//                    //
+//                    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void)
+//                    {
+//                        // ensure only one request for a URL at a time
+//                        //
+//                        @synchronized ([(RMAbstractWebMapSource *)_tileSource URLForTile:RMTileMake(x, y, zoom)])
+//                        {
+//                            // this will return quicker if cached since above attempt, else block on fetch
+//                            //
+//                            if (_tileSource.isCacheable && [_tileSource imageForTile:RMTileMake(x, y, zoom) inCache:[_mapView tileCache]])
+//                            {
+//                                dispatch_async(dispatch_get_main_queue(), ^(void)
+//                                {
+//                                    // do it all again for this tile, next time synchronously from cache
+//                                    //
+//                                    [self.layer setNeedsDisplayInRect:rect];
+//                                });
+//                            }
+//                        }
+//                    });
+//                }
+//            }
         }
 
         if ( ! tileImage)
