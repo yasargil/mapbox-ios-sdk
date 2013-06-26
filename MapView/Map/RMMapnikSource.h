@@ -34,9 +34,10 @@
 
 @protocol RMMapnikSourceDelegate <NSObject>
 
+@optional
+
 - (UIImage *)tileSource:(RMMapnikSource *)tileSource imageForTile:(RMTile)tile;
 - (CGImageRef)tileSource:(RMMapnikSource *)tileSource rawImageForTile:(RMTile)tile;
-
 
 @end
 

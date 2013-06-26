@@ -80,18 +80,13 @@
 
 - (UIImage *)imageForTile:(RMTile)tile inCache:(RMTileCache *)tileCache
 {
-//    RMProjectedRect bbox = [_mapView projectedRectFromLatitudeLongitudeBounds:[_mapView latitudeLongitudeBoundingBoxForTile:tile]];
-
-//    NSLog(@"Requesting image from Mapnik for tile [%i,%i,%i] origin (%f,%f) size (%f x %f)", tile.zoom, tile.x, tile.y, bbox.origin.x, bbox.origin.y, bbox.size.width, bbox.size.height);
-
-
-
     if ([self.delegate respondsToSelector:@selector(tileSource:rawImageForTile:)])
-        return [self.delegate tileSource:self rawImageForTile:tile];
+        return [UIImage imageWithCGImage:[self.delegate tileSource:self rawImageForTile:tile]];
 
+    if ([self.delegate respondsToSelector:@selector(tileSource:imageForTile:)])
+        return [self.delegate tileSource:self imageForTile:tile];
 
-
-    return [self.delegate tileSource:self imageForTile:tile];
+    return [UIImage imageNamed:@"LoadingTile.png"];
 }
 
 - (RMFractalTileProjection *)mercatorToTileProjection
@@ -142,7 +137,7 @@
 
 - (NSString *)shortAttribution
 {
-    return @"Copyright © 2012 Mapnik";
+    return @"Copyright © 2013 Mapnik";
 }
 
 - (NSString *)longAttribution
