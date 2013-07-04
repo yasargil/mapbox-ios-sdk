@@ -62,7 +62,7 @@
     if (!(self = [super init]))
         return nil;
 
-    self.minZoom = 9;
+    self.minZoom = 0;
     self.maxZoom = 22;
 
     self.cacheable = NO;
