@@ -110,8 +110,6 @@
 		DD333BBB1829C0EB003FB29D /* RMMapGLView.h in Headers */ = {isa = PBXBuildFile; fileRef = DD333BB91829C0EB003FB29D /* RMMapGLView.h */; };
 		DD333BBC1829C0EB003FB29D /* RMMapGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = DD333BBA1829C0EB003FB29D /* RMMapGLView.m */; };
 		DD333BC11829C503003FB29D /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DD333BC01829C503003FB29D /* OpenGLES.framework */; };
-		DD333BC8182A124D003FB29D /* AGLKVertexAttribArrayBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = DD333BC6182A124D003FB29D /* AGLKVertexAttribArrayBuffer.h */; };
-		DD333BC9182A124D003FB29D /* AGLKVertexAttribArrayBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = DD333BC7182A124D003FB29D /* AGLKVertexAttribArrayBuffer.m */; };
 		DD36766B17D94F980001F27B /* mapbox-logo@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DD36766A17D94F980001F27B /* mapbox-logo@2x.png */; };
 		DD3BEF7915913C55007892D8 /* RMAttributionViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = DD3BEF7715913C55007892D8 /* RMAttributionViewController.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		DD3BEF7A15913C55007892D8 /* RMAttributionViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DD3BEF7815913C55007892D8 /* RMAttributionViewController.m */; };
@@ -128,6 +126,8 @@
 		DD7C7E38164C894F0021CCA5 /* RMStaticMapView.h in Headers */ = {isa = PBXBuildFile; fileRef = DD7C7E36164C894F0021CCA5 /* RMStaticMapView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DD7C7E39164C894F0021CCA5 /* RMStaticMapView.m in Sources */ = {isa = PBXBuildFile; fileRef = DD7C7E37164C894F0021CCA5 /* RMStaticMapView.m */; };
 		DD8156981832C2B100A9D5A8 /* brick.jpg in Resources */ = {isa = PBXBuildFile; fileRef = DD8156971832C2B100A9D5A8 /* brick.jpg */; };
+		DD81569B1832C50E00A9D5A8 /* AGLKVertexAttribArrayBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = DD8156991832C50E00A9D5A8 /* AGLKVertexAttribArrayBuffer.h */; };
+		DD81569C1832C50E00A9D5A8 /* AGLKVertexAttribArrayBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = DD81569A1832C50E00A9D5A8 /* AGLKVertexAttribArrayBuffer.m */; };
 		DD8CDB4A14E0507100B73EB9 /* RMMapQuestOSMSource.h in Headers */ = {isa = PBXBuildFile; fileRef = DD8CDB4814E0507100B73EB9 /* RMMapQuestOSMSource.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		DD8CDB4B14E0507100B73EB9 /* RMMapQuestOSMSource.m in Sources */ = {isa = PBXBuildFile; fileRef = DD8CDB4914E0507100B73EB9 /* RMMapQuestOSMSource.m */; };
 		DD8FD7541559E4A40044D96F /* RMUserLocation.h in Headers */ = {isa = PBXBuildFile; fileRef = DD8FD7521559E4A40044D96F /* RMUserLocation.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -296,8 +296,6 @@
 		DD333BB91829C0EB003FB29D /* RMMapGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RMMapGLView.h; sourceTree = "<group>"; };
 		DD333BBA1829C0EB003FB29D /* RMMapGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RMMapGLView.m; sourceTree = "<group>"; };
 		DD333BC01829C503003FB29D /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
-		DD333BC6182A124D003FB29D /* AGLKVertexAttribArrayBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AGLKVertexAttribArrayBuffer.h; path = ../../../../../../../../../../Volumes/Playground/Examples/AGLKit/AGLKVertexAttribArrayBuffer.h; sourceTree = "<group>"; };
-		DD333BC7182A124D003FB29D /* AGLKVertexAttribArrayBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AGLKVertexAttribArrayBuffer.m; path = ../../../../../../../../../../Volumes/Playground/Examples/AGLKit/AGLKVertexAttribArrayBuffer.m; sourceTree = "<group>"; };
 		DD36766A17D94F980001F27B /* mapbox-logo@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "mapbox-logo@2x.png"; path = "Map/Resources/mapbox-logo@2x.png"; sourceTree = "<group>"; };
 		DD3BEF7715913C55007892D8 /* RMAttributionViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RMAttributionViewController.h; sourceTree = "<group>"; };
 		DD3BEF7815913C55007892D8 /* RMAttributionViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RMAttributionViewController.m; sourceTree = "<group>"; };
@@ -315,6 +313,8 @@
 		DD7C7E36164C894F0021CCA5 /* RMStaticMapView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RMStaticMapView.h; sourceTree = "<group>"; };
 		DD7C7E37164C894F0021CCA5 /* RMStaticMapView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RMStaticMapView.m; sourceTree = "<group>"; };
 		DD8156971832C2B100A9D5A8 /* brick.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = brick.jpg; sourceTree = "<group>"; };
+		DD8156991832C50E00A9D5A8 /* AGLKVertexAttribArrayBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AGLKVertexAttribArrayBuffer.h; sourceTree = "<group>"; };
+		DD81569A1832C50E00A9D5A8 /* AGLKVertexAttribArrayBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AGLKVertexAttribArrayBuffer.m; sourceTree = "<group>"; };
 		DD8CDB4814E0507100B73EB9 /* RMMapQuestOSMSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RMMapQuestOSMSource.h; sourceTree = "<group>"; };
 		DD8CDB4914E0507100B73EB9 /* RMMapQuestOSMSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RMMapQuestOSMSource.m; sourceTree = "<group>"; };
 		DD8FD7521559E4A40044D96F /* RMUserLocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RMUserLocation.h; sourceTree = "<group>"; };
@@ -477,8 +477,8 @@
 				DD333BB91829C0EB003FB29D /* RMMapGLView.h */,
 				DD333BBA1829C0EB003FB29D /* RMMapGLView.m */,
 				DD8156971832C2B100A9D5A8 /* brick.jpg */,
-				DD333BC6182A124D003FB29D /* AGLKVertexAttribArrayBuffer.h */,
-				DD333BC7182A124D003FB29D /* AGLKVertexAttribArrayBuffer.m */,
+				DD8156991832C50E00A9D5A8 /* AGLKVertexAttribArrayBuffer.h */,
+				DD81569A1832C50E00A9D5A8 /* AGLKVertexAttribArrayBuffer.m */,
 				1609AF8C14068B09008344B7 /* RMMapOverlayView.h */,
 				1609AF8D14068B09008344B7 /* RMMapOverlayView.m */,
 				16F3581915864135003A3AD9 /* RMMapScrollView.h */,
@@ -762,7 +762,7 @@
 				16EC85D4133CA6C300219947 /* RMAbstractWebMapSource.h in Headers */,
 				16EC85D6133CA6C300219947 /* RMCacheObject.h in Headers */,
 				160EEDAF13D41DEC007C5501 /* RMAnnotation.h in Headers */,
-				DD333BC8182A124D003FB29D /* AGLKVertexAttribArrayBuffer.h in Headers */,
+				DD81569B1832C50E00A9D5A8 /* AGLKVertexAttribArrayBuffer.h in Headers */,
 				DD2B375514CF8197008DE8CB /* RMMBTilesSource.h in Headers */,
 				DD98B6FA14D76B930092882F /* RMMapBoxSource.h in Headers */,
 				1607499514E120A100D535F5 /* RMGenericMapSource.h in Headers */,
@@ -965,7 +965,6 @@
 				DD2B374A14CF8041008DE8CB /* FMResultSet.m in Sources */,
 				DD2B375014CF814F008DE8CB /* FMDatabasePool.m in Sources */,
 				DD2B375214CF814F008DE8CB /* FMDatabaseQueue.m in Sources */,
-				DD333BC9182A124D003FB29D /* AGLKVertexAttribArrayBuffer.m in Sources */,
 				DD2B375614CF8197008DE8CB /* RMMBTilesSource.m in Sources */,
 				DD98B6FB14D76B930092882F /* RMMapBoxSource.m in Sources */,
 				DD8CDB4B14E0507100B73EB9 /* RMMapQuestOSMSource.m in Sources */,
@@ -990,6 +989,7 @@
 				DDE357F1165223A3001DB842 /* RMShapeAnnotation.m in Sources */,
 				DDE357F516522661001DB842 /* RMPolylineAnnotation.m in Sources */,
 				DDE357F916522CD8001DB842 /* RMPolygonAnnotation.m in Sources */,
+				DD81569C1832C50E00A9D5A8 /* AGLKVertexAttribArrayBuffer.m in Sources */,
 				DD1985C2165C5F6400DF667F /* RMTileMillSource.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
