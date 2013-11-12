@@ -163,35 +163,29 @@
             }
             else
             {
-                // for non-local tiles, consult cache directly first (if possible)
-                //
-                if (_tileSource.isCacheable)
-                    tileImage = [[_mapView tileCache] cachedImage:RMTileMake(x, y, zoom) withCacheKey:[_tileSource uniqueTilecacheKey]];
+                UIGraphicsBeginImageContext(CGSizeMake(256, 256));
 
-                if ( ! tileImage)
-                {
-                    // fire off an asynchronous retrieval
-                    //
-                    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void)
-                    {
-                        // ensure only one request for a URL at a time
-                        //
-                        @synchronized ([(RMAbstractWebMapSource *)_tileSource URLForTile:RMTileMake(x, y, zoom)])
-                        {
-                            // this will return quicker if cached since above attempt, else block on fetch
-                            //
-                            if (_tileSource.isCacheable && [_tileSource imageForTile:RMTileMake(x, y, zoom) inCache:[_mapView tileCache]])
-                            {
-                                dispatch_async(dispatch_get_main_queue(), ^(void)
-                                {
-                                    // do it all again for this tile, next time synchronously from cache
-                                    //
-                                    [self.layer setNeedsDisplayInRect:rect];
-                                });
-                            }
-                        }
-                    });
-                }
+                UIColor *tileColor = [[UIColor class] performSelector:NSSelectorFromString([[@[ @"red", @"orange", @"green", @"yellow", @"cyan" ] objectAtIndex:(rand() % 5)] stringByAppendingString:@"Color"])];
+
+                CGContextSetFillColorWithColor(UIGraphicsGetCurrentContext(), [tileColor CGColor]);
+                CGContextFillRect(UIGraphicsGetCurrentContext(), CGRectMake(0, 0, 256, 256));
+
+                CGContextSetStrokeColorWithColor(UIGraphicsGetCurrentContext(), [[UIColor blackColor] CGColor]);
+                CGContextSetLineWidth(UIGraphicsGetCurrentContext(), 10);
+                CGContextStrokeRect(UIGraphicsGetCurrentContext(), CGRectMake(0, 0, 256, 256));
+
+                UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(10, 10, 150, 30)];
+
+                label.backgroundColor = [UIColor blackColor];
+                label.textColor = [UIColor whiteColor];
+                label.text = [NSString stringWithFormat:@" %i, %i, %i", zoom, x, y];
+//                label.adjustsFontSizeToFitWidth = YES;
+
+                [label.layer drawInContext:UIGraphicsGetCurrentContext()];
+                 
+                tileImage = UIGraphicsGetImageFromCurrentImageContext();
+                 
+                UIGraphicsEndImageContext();
             }
         }
 

@@ -47,6 +47,7 @@
 #import "RMMapScrollView.h"
 #import "RMTileSourcesContainer.h"
 #import "RMMapTiledLayerView.h"
+#import "RMMapGLView.h"
 #import "RMMapOverlayView.h"
 #import "RMLoadingTileView.h"
 
@@ -166,6 +167,7 @@
 
     UIView *_backgroundView;
     RMMapScrollView *_mapScrollView;
+    RMMapGLView *_glView;
     RMMapOverlayView *_overlayView;
     UIView *_tiledLayersSuperview;
     RMLoadingTileView *_loadingTileView;
@@ -407,6 +409,7 @@
         CGRect bounds = CGRectMake(0, 0, frame.size.width, frame.size.height);
         _backgroundView.frame = bounds;
         _mapScrollView.frame = bounds;
+        _glView.frame = bounds;
         _overlayView.frame = bounds;
 
         [self setCenterProjectedPoint:centerPoint animated:NO];
@@ -1341,6 +1344,10 @@
     else
         [self insertSubview:_mapScrollView atIndex:0];
 
+    _glView = [[RMMapGLView alloc] initWithFrame:self.bounds mapView:self forTileSource:self.tileSource];
+    _glView.userInteractionEnabled = NO;
+    [self insertSubview:_glView aboveSubview:_mapScrollView];
+
     _overlayView = [[RMMapOverlayView alloc] initWithFrame:[self bounds]];
     _overlayView.userInteractionEnabled = NO;
 
@@ -1581,6 +1588,9 @@
     _zoom = log2f(_mapScrollView.zoomScale);
     _zoom = (_zoom > _maxZoom) ? _maxZoom : _zoom;
     _zoom = (_zoom < _minZoom) ? _minZoom : _zoom;
+
+    _glView.offset = _mapScrollView.contentOffset;
+    _glView.scale = _mapScrollView.zoomScale;
 
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(correctPositionOfAllAnnotations) object:nil];
 
