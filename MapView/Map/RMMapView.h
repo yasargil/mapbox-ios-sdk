@@ -26,26 +26,13 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #import <UIKit/UIKit.h>
-#import <CoreGraphics/CGGeometry.h>
 
-#import "RMGlobalConstants.h"
-#import "RMFoundation.h"
 #import "RMMapViewDelegate.h"
 #import "RMTile.h"
-#import "RMProjection.h"
-#import "RMMapOverlayView.h"
-#import "RMMapTiledLayerView.h"
-#import "RMMapScrollView.h"
-#import "RMTileSourcesContainer.h"
+#import "RMTileSource.h"
 
 @class RMProjection;
-@class RMFractalTileProjection;
-@class RMTileCache;
-@class RMMapLayer;
-@class RMMapTiledLayerView;
-@class RMMapScrollView;
-@class RMMarker;
-@class RMAnnotation;
+@class RMTileSourcesContainer;
 @class RMQuadTree;
 @class RMUserLocation;
 

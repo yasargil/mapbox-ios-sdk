@@ -43,6 +43,8 @@
 #import "RMTileSource.h"
 #import "RMMapBoxSource.h"
 
+#import "RMMapScrollView.h"
+#import "RMTileSourcesContainer.h"
 #import "RMMapTiledLayerView.h"
 #import "RMMapOverlayView.h"
 #import "RMLoadingTileView.h"
