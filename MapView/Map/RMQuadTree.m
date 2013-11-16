@@ -412,19 +412,28 @@
         {
             NSMutableArray *annotationsToCheck = [NSMutableArray arrayWithArray:[self enclosedWithoutUnclusteredAnnotations]];
 
-            for (NSInteger i=[annotationsToCheck count]-1; i>0; --i)
+            NSMutableArray *unclusteredAnnotations = [NSMutableArray array];
+            NSMutableArray *checkedAnnotations     = [NSMutableArray array];
+
+            NSMutableSet *checkedPairs = [NSMutableSet set];
+
+            for (RMAnnotation *currentAnnotation in annotationsToCheck)
             {
                 BOOL mustBeClustered = NO;
-                RMAnnotation *currentAnnotation = [annotationsToCheck objectAtIndex:i];
 
-                for (NSInteger j=i-1; j>=0; --j)
+                for (RMAnnotation *secondAnnotation in annotationsToCheck)
                 {
-                    RMAnnotation *secondAnnotation = [annotationsToCheck objectAtIndex:j];
+                    if ([secondAnnotation isEqual:currentAnnotation] || [checkedPairs containsObject:[NSSet setWithObjects:currentAnnotation, secondAnnotation, nil]])
+                        continue;
 
-                    // This is of course not very accurate but is good enough for this use case
+                    [checkedPairs addObject:[NSSet setWithObjects:currentAnnotation, secondAnnotation, nil]];
+
                     double distance = RMEuclideanDistanceBetweenProjectedPoints(currentAnnotation.projectedLocation, secondAnnotation.projectedLocation) / _mapView.metersPerPixel;
+
                     if (distance < kMinPixelDistanceForLeafClustering)
                     {
+                        [unclusteredAnnotations removeObject:currentAnnotation];
+                        [unclusteredAnnotations removeObject:secondAnnotation];
                         mustBeClustered = YES;
                         break;
                     }
@@ -432,10 +441,13 @@
 
                 if (!mustBeClustered)
                 {
-                    [someArray addObject:currentAnnotation];
-                    [annotationsToCheck removeObjectAtIndex:i];
+                    [unclusteredAnnotations addObject:currentAnnotation];
+                    [checkedAnnotations addObject:currentAnnotation];
                 }
             }
+
+            [someArray addObjectsFromArray:unclusteredAnnotations];
+            [annotationsToCheck removeObjectsInArray:checkedAnnotations];
 
             forceClustering = ([annotationsToCheck count] > 0);
 
