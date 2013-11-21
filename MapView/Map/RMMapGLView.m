@@ -32,7 +32,7 @@
     if (!(self = [super initWithFrame:frame]))
         return nil;
 
-    self.alpha = 0.9;
+    self.alpha = 0.75;
 
     _mapView = aMapView;
     _tileSource = aTileSource;
@@ -57,6 +57,46 @@
     [EAGLContext setCurrentContext:self.context];
     self.context = nil;
     [EAGLContext setCurrentContext:nil];
+}
+
+- (CGPoint)offset
+{
+    return _offset;
+}
+
+- (void)setOffset:(CGPoint)offset
+{
+    _offset = offset;
+
+    [self updateTile];
+}
+
+- (CGFloat)scale
+{
+    return _scale;
+}
+
+- (void)setScale:(CGFloat)scale
+{
+    _scale = scale;
+
+    [self updateTile];
+}
+
+- (void)updateTile
+{
+    CGSize contentSize = [[self.mapView valueForKeyPath:@"mapScrollView.contentSize"] CGSizeValue];
+
+    CGFloat zoom = log2f(self.scale);
+
+    CGFloat x = (_offset.x / contentSize.width)  * powf(2.0, zoom);
+    CGFloat y = (_offset.y / contentSize.height) * powf(2.0, zoom);
+
+    RMTile tileToDraw = RMTileMake((int)floorf(x), (int)floorf(y), (int)floorf(zoom));
+
+    RMLogTile(tileToDraw);
+
+    [self display];
 }
 
 - (void)drawRect:(CGRect)rect
