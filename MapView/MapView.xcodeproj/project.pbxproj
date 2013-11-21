@@ -107,8 +107,8 @@
 		DD2B375514CF8197008DE8CB /* RMMBTilesSource.h in Headers */ = {isa = PBXBuildFile; fileRef = DD2B375314CF8197008DE8CB /* RMMBTilesSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DD2B375614CF8197008DE8CB /* RMMBTilesSource.m in Sources */ = {isa = PBXBuildFile; fileRef = DD2B375414CF8197008DE8CB /* RMMBTilesSource.m */; };
 		DD333BB81829C0C7003FB29D /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DD333BB71829C0C7003FB29D /* GLKit.framework */; };
-		DD333BBB1829C0EB003FB29D /* RMMapGLView.h in Headers */ = {isa = PBXBuildFile; fileRef = DD333BB91829C0EB003FB29D /* RMMapGLView.h */; };
-		DD333BBC1829C0EB003FB29D /* RMMapGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = DD333BBA1829C0EB003FB29D /* RMMapGLView.m */; };
+		DD333BBB1829C0EB003FB29D /* RMMapGLView_old.h in Headers */ = {isa = PBXBuildFile; fileRef = DD333BB91829C0EB003FB29D /* RMMapGLView_old.h */; };
+		DD333BBC1829C0EB003FB29D /* RMMapGLView_old.m in Sources */ = {isa = PBXBuildFile; fileRef = DD333BBA1829C0EB003FB29D /* RMMapGLView_old.m */; };
 		DD333BC11829C503003FB29D /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DD333BC01829C503003FB29D /* OpenGLES.framework */; };
 		DD36766B17D94F980001F27B /* mapbox-logo@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DD36766A17D94F980001F27B /* mapbox-logo@2x.png */; };
 		DD3BEF7915913C55007892D8 /* RMAttributionViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = DD3BEF7715913C55007892D8 /* RMAttributionViewController.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -165,6 +165,8 @@
 		DDA2570B1798A95600BBB325 /* TrackingLocationMask.png in Resources */ = {isa = PBXBuildFile; fileRef = DDA257001798A95600BBB325 /* TrackingLocationMask.png */; };
 		DDA6B8BD155CAB67003DB5D8 /* RMUserTrackingBarButtonItem.h in Headers */ = {isa = PBXBuildFile; fileRef = DDA6B8BB155CAB67003DB5D8 /* RMUserTrackingBarButtonItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DDA6B8BE155CAB67003DB5D8 /* RMUserTrackingBarButtonItem.m in Sources */ = {isa = PBXBuildFile; fileRef = DDA6B8BC155CAB67003DB5D8 /* RMUserTrackingBarButtonItem.m */; };
+		DDB50530183EC3B200A19018 /* RMMapGLView.h in Headers */ = {isa = PBXBuildFile; fileRef = DDB5052E183EC3B200A19018 /* RMMapGLView.h */; };
+		DDB50531183EC3B200A19018 /* RMMapGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = DDB5052F183EC3B200A19018 /* RMMapGLView.m */; };
 		DDC4BED5152E3BD700089409 /* RMInteractiveSource.h in Headers */ = {isa = PBXBuildFile; fileRef = DDC4BED3152E3BD700089409 /* RMInteractiveSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		DDC4BEF2152E3FAE00089409 /* RMInteractiveSource.m in Sources */ = {isa = PBXBuildFile; fileRef = DDC4BED4152E3BD700089409 /* RMInteractiveSource.m */; };
 		DDC8D28717E92ED100A4FB32 /* LoadingTile6.png in Resources */ = {isa = PBXBuildFile; fileRef = DDC8D28517E92ED100A4FB32 /* LoadingTile6.png */; };
@@ -293,8 +295,8 @@
 		DD2B375314CF8197008DE8CB /* RMMBTilesSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RMMBTilesSource.h; sourceTree = "<group>"; };
 		DD2B375414CF8197008DE8CB /* RMMBTilesSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RMMBTilesSource.m; sourceTree = "<group>"; };
 		DD333BB71829C0C7003FB29D /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
-		DD333BB91829C0EB003FB29D /* RMMapGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RMMapGLView.h; sourceTree = "<group>"; };
-		DD333BBA1829C0EB003FB29D /* RMMapGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RMMapGLView.m; sourceTree = "<group>"; };
+		DD333BB91829C0EB003FB29D /* RMMapGLView_old.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RMMapGLView_old.h; sourceTree = "<group>"; };
+		DD333BBA1829C0EB003FB29D /* RMMapGLView_old.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RMMapGLView_old.m; sourceTree = "<group>"; };
 		DD333BC01829C503003FB29D /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
 		DD36766A17D94F980001F27B /* mapbox-logo@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "mapbox-logo@2x.png"; path = "Map/Resources/mapbox-logo@2x.png"; sourceTree = "<group>"; };
 		DD3BEF7715913C55007892D8 /* RMAttributionViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RMAttributionViewController.h; sourceTree = "<group>"; };
@@ -352,6 +354,8 @@
 		DDA257001798A95600BBB325 /* TrackingLocationMask.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = TrackingLocationMask.png; path = Map/Resources/TrackingLocationMask.png; sourceTree = "<group>"; };
 		DDA6B8BB155CAB67003DB5D8 /* RMUserTrackingBarButtonItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RMUserTrackingBarButtonItem.h; sourceTree = "<group>"; };
 		DDA6B8BC155CAB67003DB5D8 /* RMUserTrackingBarButtonItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RMUserTrackingBarButtonItem.m; sourceTree = "<group>"; };
+		DDB5052E183EC3B200A19018 /* RMMapGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RMMapGLView.h; sourceTree = "<group>"; };
+		DDB5052F183EC3B200A19018 /* RMMapGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RMMapGLView.m; sourceTree = "<group>"; };
 		DDC4BED3152E3BD700089409 /* RMInteractiveSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RMInteractiveSource.h; sourceTree = "<group>"; };
 		DDC4BED4152E3BD700089409 /* RMInteractiveSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RMInteractiveSource.m; sourceTree = "<group>"; };
 		DDC8D28517E92ED100A4FB32 /* LoadingTile6.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = LoadingTile6.png; path = Map/Resources/LoadingTile6.png; sourceTree = "<group>"; };
@@ -474,8 +478,10 @@
 				B83E64D90E80E73F001663B6 /* RMTileImage.m */,
 				160E535513FBDB47004F82F9 /* RMMapTiledLayerView.h */,
 				160E535613FBDB48004F82F9 /* RMMapTiledLayerView.m */,
-				DD333BB91829C0EB003FB29D /* RMMapGLView.h */,
-				DD333BBA1829C0EB003FB29D /* RMMapGLView.m */,
+				DDB5052E183EC3B200A19018 /* RMMapGLView.h */,
+				DDB5052F183EC3B200A19018 /* RMMapGLView.m */,
+				DD333BB91829C0EB003FB29D /* RMMapGLView_old.h */,
+				DD333BBA1829C0EB003FB29D /* RMMapGLView_old.m */,
 				DD8156971832C2B100A9D5A8 /* brick.jpg */,
 				DD8156991832C50E00A9D5A8 /* AGLKVertexAttribArrayBuffer.h */,
 				DD81569A1832C50E00A9D5A8 /* AGLKVertexAttribArrayBuffer.m */,
@@ -761,6 +767,7 @@
 				16EC85D2133CA6C300219947 /* RMAbstractMercatorTileSource.h in Headers */,
 				16EC85D4133CA6C300219947 /* RMAbstractWebMapSource.h in Headers */,
 				16EC85D6133CA6C300219947 /* RMCacheObject.h in Headers */,
+				DDB50530183EC3B200A19018 /* RMMapGLView.h in Headers */,
 				160EEDAF13D41DEC007C5501 /* RMAnnotation.h in Headers */,
 				DD81569B1832C50E00A9D5A8 /* AGLKVertexAttribArrayBuffer.h in Headers */,
 				DD2B375514CF8197008DE8CB /* RMMBTilesSource.h in Headers */,
@@ -771,7 +778,7 @@
 				DDA6B8BD155CAB67003DB5D8 /* RMUserTrackingBarButtonItem.h in Headers */,
 				16F98C961590CFF000FF90CE /* RMShape.h in Headers */,
 				DD4BE198161CE296003EF677 /* MapBox.h in Headers */,
-				DD333BBB1829C0EB003FB29D /* RMMapGLView.h in Headers */,
+				DD333BBB1829C0EB003FB29D /* RMMapGLView_old.h in Headers */,
 				16E5A63A15E531F200C92A5A /* RMCompositeSource.h in Headers */,
 				DD7C7E38164C894F0021CCA5 /* RMStaticMapView.h in Headers */,
 				DDE357E71651F570001DB842 /* RMPointAnnotation.h in Headers */,
@@ -944,7 +951,7 @@
 				B8C9744A0E8A19B2007D16AD /* RMProjection.m in Sources */,
 				B8C9746C0E8A1A50007D16AD /* RMMapView.m in Sources */,
 				B8F3FC610EA2B382004D8F85 /* RMMapLayer.m in Sources */,
-				DD333BBC1829C0EB003FB29D /* RMMapGLView.m in Sources */,
+				DD333BBC1829C0EB003FB29D /* RMMapGLView_old.m in Sources */,
 				B8F3FC650EA2E792004D8F85 /* RMMarker.m in Sources */,
 				B8474BA50EB40094006A0BC1 /* RMDatabaseCache.m in Sources */,
 				126693040EB76C0B00E002D5 /* RMConfiguration.m in Sources */,
@@ -958,6 +965,7 @@
 				1606C9FF13D86BA400547581 /* RMOpenCycleMapSource.m in Sources */,
 				16FAB66513E03D55002F4E1C /* RMQuadTree.m in Sources */,
 				160E535813FBDB48004F82F9 /* RMMapTiledLayerView.m in Sources */,
+				DDB50531183EC3B200A19018 /* RMMapGLView.m in Sources */,
 				1609AF8F14068B09008344B7 /* RMMapOverlayView.m in Sources */,
 				16128CF6148D295300C23C0E /* RMOpenSeaMapSource.m in Sources */,
 				DD2B374614CF8041008DE8CB /* FMDatabase.m in Sources */,

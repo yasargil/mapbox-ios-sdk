@@ -2,7 +2,7 @@
 //  RMMapGLView.h
 //  MapView
 //
-//  Created by Justin R. Miller on 11/21/13.
+//  Created by Justin R. Miller on 11/5/13.
 //
 //
 
@@ -12,9 +12,11 @@
 
 @class RMMapView;
 
-@interface RMMapGLView : GLKView
+@interface RMMapGLView_old : GLKView
 
-@property (nonatomic, readonly) id <RMTileSource>tileSource; // single source for now
+@property (nonatomic, assign) BOOL useSnapshotRenderer;
+
+@property (nonatomic, readonly) id <RMTileSource>tileSource;
 
 @property CGFloat scale;
 @property CGPoint offset;
