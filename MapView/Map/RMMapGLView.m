@@ -70,11 +70,9 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 
     [EAGLContext setCurrentContext:self.context];
 
-    self.baseEffect = [GLKBaseEffect new];
-
-    self.baseEffect.useConstantColor = GL_TRUE;
-
-    self.baseEffect.constantColor = GLKVector4Make(1.0f, 1.0f, 1.0f, 1.0f);
+    _baseEffect = [GLKBaseEffect new];
+    _baseEffect.useConstantColor = GL_TRUE;
+    _baseEffect.constantColor = GLKVector4Make(1.0f, 1.0f, 1.0f, 1.0f);
 
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 
@@ -107,10 +105,10 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 
 - (void)dealloc
 {
-    if (self.bufferName)
+    if (_bufferName)
     {
         glDeleteBuffers(1, &_bufferName);
-        self.bufferName = 0;
+        _bufferName = 0;
     }
 
     [EAGLContext setCurrentContext:self.context];
