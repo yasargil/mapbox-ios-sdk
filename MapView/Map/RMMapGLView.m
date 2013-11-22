@@ -21,6 +21,14 @@ typedef struct {
 
 static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVertex vertexB, const SceneVertex vertexC);
 
+@interface RMMapView (PrivateMethods)
+
+- (RMProjectedRect)projectedRectFromLatitudeLongitudeBounds:(RMSphericalTrapezium)bounds;
+
+@end
+
+#pragma mark -
+
 @interface RMMapGLView ()
 
 @property RMMapView *mapView;
@@ -194,9 +202,7 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
                     {
                         UIImage *tileImage = [self.tileSource imageForTile:tile inCache:self.mapView.tileCache];
 
-                        // TODO: check again if tile is still needed
-
-                        if (tileImage)
+                        if (RMProjectedRectIntersectsProjectedRect([self.mapView projectedBounds], [self.mapView projectedRectFromLatitudeLongitudeBounds:[self.mapView latitudeLongitudeBoundingBoxForTile:tile]]) && tileImage)
                         {
                             dispatch_async(dispatch_get_main_queue(), ^(void)
                             {
