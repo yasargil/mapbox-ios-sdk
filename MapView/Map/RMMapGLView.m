@@ -224,6 +224,12 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
     glDrawArrays(GL_TRIANGLES, // draw mode
                  0,            // start vertex index
                  6);           // vertex count
+
+    // adjust aspect ratio
+    //
+    self.baseEffect.transform.projectionMatrix = GLKMatrix4MakeScale(1.0f,
+                                                                     (GLfloat)self.drawableWidth / (GLfloat)self.drawableHeight,
+                                                                     1.0f);
 }
 
 @end
