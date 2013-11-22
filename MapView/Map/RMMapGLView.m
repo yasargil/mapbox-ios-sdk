@@ -168,6 +168,9 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 
 - (void)setScale:(CGFloat)scale
 {
+    if (floorf(log2f(scale)) != floorf(log2f(_scale)))
+        [self.textures removeAllObjects];
+
     _scale = scale;
 
     [self updateTiles];
