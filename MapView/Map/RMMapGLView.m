@@ -244,10 +244,6 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 
                 [self.baseEffect prepareToDraw];
 
-                // 2
-                //
-                glBindBuffer(GL_ARRAY_BUFFER, self.bufferName);
-
                 // 4
                 //
                 glEnableVertexAttribArray(GLKVertexAttribPosition);
@@ -261,9 +257,8 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
                                       sizeof(SceneVertex),                     // total bytes per vertex
                                       NULL + offsetof(SceneVertex, position)); // offset in each vertex for position
 
-                // 2, 4, and 5 again for texture
+                // 4 and 5 again for texture
                 //
-                glBindBuffer(GL_ARRAY_BUFFER, self.bufferName);
                 glEnableVertexAttribArray(GLKVertexAttribTexCoord0);
                 glVertexAttribPointer(GLKVertexAttribTexCoord0,
                                       2,
