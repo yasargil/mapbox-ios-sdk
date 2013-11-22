@@ -31,7 +31,7 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 @property GLuint bufferName;
 @property RMTile lastTile;
 @property NSOperationQueue *tileQueue;
-@property GLKTextureInfo *textureInfo;
+@property NSMutableDictionary *textures;
 
 @end
 
@@ -60,7 +60,7 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
     if (!(self = [super initWithFrame:frame]))
         return nil;
 
-    self.alpha = 0.9;
+    self.alpha = 0.95;
 
     _mapView = aMapView;
     _tileSource = aTileSource;
@@ -75,8 +75,8 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 
-    _tileColumns = 2;
-    _tileRows    = 2;
+    _tileColumns = 3;
+    _tileRows    = 3;
 
     CGSize tileSize = CGSizeMake(2.0 / _tileColumns, 2.0 / _tileRows);
 
@@ -122,7 +122,8 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
                  GL_DYNAMIC_DRAW); // cache in GPU memory
 
     _tileQueue = [NSOperationQueue new];
-    _tileQueue.maxConcurrentOperationCount = 1;
+
+    _textures = [NSMutableDictionary dictionary];
 
     return self;
 }
@@ -173,27 +174,52 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
     CGFloat x = (_offset.x / contentSize.width)  * powf(2.0, zoom);
     CGFloat y = (_offset.y / contentSize.height) * powf(2.0, zoom);
 
-    RMTile tileToDraw = RMTileMake((int)floorf(x), (int)floorf(y), (int)floorf(zoom));
+    RMTile topLeftTile = RMTileMake(x, y, zoom);
 
-    if ( ! RMTilesEqual(tileToDraw, self.lastTile))
+    if ( ! RMTilesEqual(topLeftTile, self.lastTile))
     {
-        [self.tileQueue addOperationWithBlock:^(void)
+        for (NSUInteger c = 0; c < self.tileColumns; c++)
         {
-            UIImage *tileImage = [self.tileSource imageForTile:tileToDraw inCache:self.mapView.tileCache];
-
-            // TODO: check again if tile is still needed
-
-            if (tileImage)
+            for (NSUInteger r = 0; r < self.tileRows; r++)
             {
-                self.textureInfo = [GLKTextureLoader textureWithCGImage:tileImage.CGImage
-                                                                options:@ { GLKTextureLoaderOriginBottomLeft : @YES }
-                                                                  error:nil];
+                RMTile tile = RMTileMake(topLeftTile.x + c, topLeftTile.y - r, topLeftTile.zoom);
 
-                self.lastTile = tileToDraw;
+                uint64_t tileKey = RMTileKey(tile);
 
-                [self display];
+                // TODO: clean up old textures
+
+                if ( ! [self.textures objectForKey:@(tileKey)])
+                {
+                    [self.tileQueue addOperationWithBlock:^(void)
+                    {
+                        UIImage *tileImage = [self.tileSource imageForTile:tile inCache:self.mapView.tileCache];
+
+                        // TODO: check again if tile is still needed
+
+                        if (tileImage)
+                        {
+                            dispatch_async(dispatch_get_main_queue(), ^(void)
+                            {
+                                [EAGLContext setCurrentContext:self.context];
+
+                                GLKTextureInfo *texture = [GLKTextureLoader textureWithCGImage:tileImage.CGImage
+                                                                                       options:@{ GLKTextureLoaderOriginBottomLeft : @YES }
+                                                                                         error:nil];
+
+                                if (texture)
+                                {
+                                    [self.textures setObject:texture forKey:@(tileKey)];
+
+                                    [self display];
+                                }
+                            });
+                        }
+                    }];
+                }
             }
-        }];
+        }
+
+        self.lastTile = topLeftTile;
     }
 }
 
@@ -201,47 +227,61 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    if (self.textureInfo)
+    NSUInteger index = 0;
+
+    for (NSUInteger c = 0; c < self.tileColumns; c++)
     {
-        self.baseEffect.texture2d0.name   = self.textureInfo.name;
-        self.baseEffect.texture2d0.target = self.textureInfo.target;
+        for (NSUInteger r = 0; r < self.tileRows; r++)
+        {
+            uint64_t tileKey = RMTileKey(RMTileMake(self.lastTile.x + c, self.lastTile.y - r, self.lastTile.zoom));
+
+            GLKTextureInfo *texture = [self.textures objectForKey:@(tileKey)];
+
+            if (texture)
+            {
+                self.baseEffect.texture2d0.name   = texture.name;
+                self.baseEffect.texture2d0.target = texture.target;
+
+                [self.baseEffect prepareToDraw];
+
+                // 2
+                //
+                glBindBuffer(GL_ARRAY_BUFFER, self.bufferName);
+
+                // 4
+                //
+                glEnableVertexAttribArray(GLKVertexAttribPosition);
+
+                // 5
+                //
+                glVertexAttribPointer(GLKVertexAttribPosition,                 // use position attribute
+                                      3,                                       // number of coordinates per attribute
+                                      GL_FLOAT,                                // data is floating point
+                                      GL_FALSE,                                // no fixed point scaling
+                                      sizeof(SceneVertex),                     // total bytes per vertex
+                                      NULL + offsetof(SceneVertex, position)); // offset in each vertex for position
+
+                // 2, 4, and 5 again for texture
+                //
+                glBindBuffer(GL_ARRAY_BUFFER, self.bufferName);
+                glEnableVertexAttribArray(GLKVertexAttribTexCoord0);
+                glVertexAttribPointer(GLKVertexAttribTexCoord0,
+                                      2,
+                                      GL_FLOAT,
+                                      GL_FALSE,
+                                      sizeof(SceneVertex),
+                                      NULL + offsetof(SceneVertex, texture));
+
+                // 6
+                //
+                glDrawArrays(GL_TRIANGLES, // draw mode
+                             index * 6,    // start vertex index
+                             6);           // vertex count (1 tile * 2 triangles * 3 vertices)
+
+                index++;
+            }
+        }
     }
-
-    [self.baseEffect prepareToDraw];
-
-    // 2
-    //
-    glBindBuffer(GL_ARRAY_BUFFER, self.bufferName);
-
-    // 4
-    //
-    glEnableVertexAttribArray(GLKVertexAttribPosition);
-
-    // 5
-    //
-    glVertexAttribPointer(GLKVertexAttribPosition,                 // use position attribute
-                          3,                                       // number of coordinates per attribute
-                          GL_FLOAT,                                // data is floating point
-                          GL_FALSE,                                // no fixed point scaling
-                          sizeof(SceneVertex),                     // total bytes per vertex
-                          NULL + offsetof(SceneVertex, position)); // offset in each vertex for position
-
-    // 2, 4, and 5 again for texture
-    //
-    glBindBuffer(GL_ARRAY_BUFFER, self.bufferName);
-    glEnableVertexAttribArray(GLKVertexAttribTexCoord0);
-    glVertexAttribPointer(GLKVertexAttribTexCoord0,
-                          2,
-                          GL_FLOAT,
-                          GL_FALSE,
-                          sizeof(SceneVertex),
-                          NULL + offsetof(SceneVertex, texture));
-
-    // 6
-    //
-    glDrawArrays(GL_TRIANGLES,                                // draw mode
-                 0,                                           // start vertex index
-                 (self.tileColumns * self.tileRows * 2 * 3)); // vertex count (tiles * triangles * vertices)
 
     // adjust aspect ratio
     //
