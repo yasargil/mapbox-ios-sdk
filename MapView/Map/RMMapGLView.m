@@ -12,7 +12,7 @@
 
 typedef struct {
     GLKVector3 position;
-    GLKVector2 textureCoords;
+    GLKVector2 texture;
     GLKVector3 normal;
 } SceneVertex;
 
@@ -33,6 +33,9 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 @property id <RMTileSource>tileSource;
 @property GLKBaseEffect *baseEffect;
 @property GLuint bufferName;
+@property RMTile lastTile;
+@property NSOperationQueue *tileQueue;
+@property GLKTextureInfo *textureInfo;
 
 @end
 
@@ -61,7 +64,7 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
     if (!(self = [super initWithFrame:frame]))
         return nil;
 
-    self.alpha = 0.75;
+    self.alpha = 0.9;
 
     _mapView = aMapView;
     _tileSource = aTileSource;
@@ -99,6 +102,9 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
                  bufferSizeBytes,  // number of bytes to copy
                  triangles,        // address of bytes to copy
                  GL_DYNAMIC_DRAW); // cache in GPU memory
+
+    _tileQueue = [NSOperationQueue new];
+    _tileQueue.maxConcurrentOperationCount = 1;
 
     return self;
 }
@@ -151,14 +157,37 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 
     RMTile tileToDraw = RMTileMake((int)floorf(x), (int)floorf(y), (int)floorf(zoom));
 
-    RMLogTile(tileToDraw);
+    if ( ! RMTilesEqual(tileToDraw, self.lastTile))
+    {
+        [self.tileQueue addOperationWithBlock:^(void)
+        {
+            UIImage *tileImage = [self.tileSource imageForTile:tileToDraw inCache:self.mapView.tileCache];
 
-    [self display];
+            // TODO: check again if tile is still needed
+
+            if (tileImage)
+            {
+                self.textureInfo = [GLKTextureLoader textureWithCGImage:tileImage.CGImage
+                                                                options:@ { GLKTextureLoaderOriginBottomLeft : @YES }
+                                                                  error:nil];
+
+                self.lastTile = tileToDraw;
+
+                [self display];
+            }
+        }];
+    }
 }
 
 - (void)drawRect:(CGRect)rect
 {
     glClear(GL_COLOR_BUFFER_BIT);
+
+    if (self.textureInfo)
+    {
+        self.baseEffect.texture2d0.name   = self.textureInfo.name;
+        self.baseEffect.texture2d0.target = self.textureInfo.target;
+    }
 
     [self.baseEffect prepareToDraw];
 
@@ -172,12 +201,23 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 
     // 5
     //
-    glVertexAttribPointer(GLKVertexAttribPosition,          // use position attribute
-                          3,                                // number of coordinates per attribute
-                          GL_FLOAT,                         // data is floating point
-                          GL_FALSE,                         // no fixed point scaling
-                          sizeof(SceneVertex),              // total bytes per vertex
-                          offsetof(SceneVertex, position)); // offset in each vertex for position
+    glVertexAttribPointer(GLKVertexAttribPosition,                 // use position attribute
+                          3,                                       // number of coordinates per attribute
+                          GL_FLOAT,                                // data is floating point
+                          GL_FALSE,                                // no fixed point scaling
+                          sizeof(SceneVertex),                     // total bytes per vertex
+                          NULL + offsetof(SceneVertex, position)); // offset in each vertex for position
+
+    // 2, 4, and 5 again for texture
+    //
+    glBindBuffer(GL_ARRAY_BUFFER, self.bufferName);
+    glEnableVertexAttribArray(GLKVertexAttribTexCoord0);
+    glVertexAttribPointer(GLKVertexAttribTexCoord0,
+                          2,
+                          GL_FLOAT,
+                          GL_FALSE,
+                          sizeof(SceneVertex),
+                          NULL + offsetof(SceneVertex, texture));
 
     // 6
     //
