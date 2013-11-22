@@ -177,10 +177,10 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 {
     CGSize contentSize = [[self.mapView valueForKeyPath:@"mapScrollView.contentSize"] CGSizeValue];
 
-    CGFloat zoom = log2f(self.scale);
+    CGFloat zoom = floorf(log2f(self.scale));
 
-    CGFloat x = (_offset.x / contentSize.width)  * powf(2.0, zoom);
-    CGFloat y = (_offset.y / contentSize.height) * powf(2.0, zoom);
+    CGFloat x = floorf((_offset.x / contentSize.width)  * powf(2.0, zoom));
+    CGFloat y = floorf((_offset.y / contentSize.height) * powf(2.0, zoom));
 
     RMTile topLeftTile = RMTileMake(x, y, zoom);
 
