@@ -158,7 +158,7 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 {
     _offset = offset;
 
-    [self updateTile];
+    [self updateTiles];
 }
 
 - (CGFloat)scale
@@ -170,10 +170,10 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 {
     _scale = scale;
 
-    [self updateTile];
+    [self updateTiles];
 }
 
-- (void)updateTile
+- (void)updateTiles
 {
     CGSize contentSize = [[self.mapView valueForKeyPath:@"mapScrollView.contentSize"] CGSizeValue];
 
