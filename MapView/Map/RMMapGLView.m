@@ -15,11 +15,6 @@ typedef struct {
     GLKVector2 texture;
 } SceneVertex;
 
-static SceneVertex tileVertexSW = {{-1,  0, 0}, {0, 0}};
-static SceneVertex tileVertexSE = {{ 0,  0, 0}, {1, 0}};
-static SceneVertex tileVertexNW = {{-1,  1, 0}, {0, 1}};
-static SceneVertex tileVertexNE = {{ 0,  1, 0}, {1, 1}};
-
 typedef struct {
     SceneVertex vertices[3];
 } SceneTriangle;
@@ -31,6 +26,8 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 @property RMMapView *mapView;
 @property id <RMTileSource>tileSource;
 @property GLKBaseEffect *baseEffect;
+@property NSUInteger tileColumns;
+@property NSUInteger tileRows;
 @property GLuint bufferName;
 @property RMTile lastTile;
 @property NSOperationQueue *tileQueue;
@@ -78,10 +75,32 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 
-    SceneTriangle triangles[2];
+    _tileColumns = 2;
+    _tileRows    = 2;
 
-    triangles[0] = SceneTriangleMake(tileVertexSE, tileVertexSW, tileVertexNW);
-    triangles[1] = SceneTriangleMake(tileVertexSE, tileVertexNW, tileVertexNE);
+    CGSize tileSize = CGSizeMake(2.0 / _tileColumns, 2.0 / _tileRows);
+
+    SceneTriangle triangles[(_tileColumns * _tileRows * 2)];
+
+    NSUInteger index = 0;
+
+    for (NSUInteger c = 0; c < _tileColumns; c++)
+    {
+        for (NSUInteger r = 0; r < _tileRows; r++)
+        {
+            // assume origin at lower left & 2.0 for height/width, then substract 1.0 off
+            //
+            SceneVertex tileVertexSW = {{((CGFloat)c * tileSize.width) - 1.0, ((CGFloat)r * tileSize.height) - 1.0, 0}, {0, 0}};
+            SceneVertex tileVertexSE = {{tileVertexSW.position.v[0] + tileSize.width, tileVertexSW.position.v[1], 0}, {1, 0}};
+            SceneVertex tileVertexNW = {{tileVertexSW.position.v[0], tileVertexSW.position.v[1] + tileSize.height, 0}, {0, 1}};
+            SceneVertex tileVertexNE = {{tileVertexSE.position.v[0], tileVertexNW.position.v[1], 0}, {1, 1}};
+
+            triangles[index]       = SceneTriangleMake(tileVertexSE, tileVertexSW, tileVertexNW);
+            triangles[(index + 1)] = SceneTriangleMake(tileVertexSE, tileVertexNW, tileVertexNE);
+
+            index += 2;
+        }
+    }
 
     // 1
     //
@@ -220,9 +239,9 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 
     // 6
     //
-    glDrawArrays(GL_TRIANGLES, // draw mode
-                 0,            // start vertex index
-                 6);           // vertex count
+    glDrawArrays(GL_TRIANGLES,                                // draw mode
+                 0,                                           // start vertex index
+                 (self.tileColumns * self.tileRows * 2 * 3)); // vertex count (tiles * triangles * vertices)
 
     // adjust aspect ratio
     //
