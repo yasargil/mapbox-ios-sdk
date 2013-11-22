@@ -13,13 +13,12 @@
 typedef struct {
     GLKVector3 position;
     GLKVector2 texture;
-    GLKVector3 normal;
 } SceneVertex;
 
-static SceneVertex tileVertexSW = {{-1,  0, 0}, {0, 0}, {0, 0, 1}};
-static SceneVertex tileVertexSE = {{ 0,  0, 0}, {1, 0}, {0, 0, 1}};
-static SceneVertex tileVertexNW = {{-1,  1, 0}, {0, 1}, {0, 0, 1}};
-static SceneVertex tileVertexNE = {{ 0,  1, 0}, {1, 1}, {0, 0, 1}};
+static SceneVertex tileVertexSW = {{-1,  0, 0}, {0, 0}};
+static SceneVertex tileVertexSE = {{ 0,  0, 0}, {1, 0}};
+static SceneVertex tileVertexNW = {{-1,  1, 0}, {0, 1}};
+static SceneVertex tileVertexNE = {{ 0,  1, 0}, {1, 1}};
 
 typedef struct {
     SceneVertex vertices[3];
