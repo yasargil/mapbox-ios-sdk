@@ -38,8 +38,6 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 @property NSUInteger tileRows;
 @property GLuint bufferName;
 @property RMTile lastTile;
-@property dispatch_queue_t textureQueue;
-@property EAGLContext *textureContext;
 @property NSMutableDictionary *textures;
 
 @end
@@ -74,8 +72,7 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
     _mapView = aMapView;
     _tileSource = aTileSource;
 
-    self.context    = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-    _textureContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2 sharegroup:self.context.sharegroup];
+    self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
     [EAGLContext setCurrentContext:self.context];
 
     _baseEffect = [GLKBaseEffect new];
@@ -130,8 +127,6 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
                  triangles,        // address of bytes to copy
                  GL_DYNAMIC_DRAW); // cache in GPU memory
 
-    _textureQueue = dispatch_queue_create("com.mapbox.texture", DISPATCH_QUEUE_SERIAL);
-
     _textures = [NSMutableDictionary dictionary];
 
     return self;
@@ -145,10 +140,6 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
         _bufferName = 0;
     }
 
-    dispatch_release(_textureQueue);
-
-    [EAGLContext setCurrentContext:_textureContext];
-    _textureContext = nil;
     [EAGLContext setCurrentContext:self.context];
     self.context = nil;
     [EAGLContext setCurrentContext:nil];
@@ -210,36 +201,31 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
                     {
                         UIImage *tileImage = [self.tileSource imageForTile:tile inCache:self.mapView.tileCache];
 
-                        __block BOOL tileStillNeeded;
-
-                        dispatch_sync(dispatch_get_main_queue(), ^(void)
+                        dispatch_async(dispatch_get_main_queue(), ^(void)
                         {
-                            tileStillNeeded = (RMProjectedRectIntersectsProjectedRect([self.mapView projectedBounds], [self.mapView projectedRectFromLatitudeLongitudeBounds:[self.mapView latitudeLongitudeBoundingBoxForTile:tile]]) && ! [self.textures objectForKey:@(tileKey)]);
+                            BOOL tileStillNeeded = (RMProjectedRectIntersectsProjectedRect([self.mapView projectedBounds], [self.mapView projectedRectFromLatitudeLongitudeBounds:[self.mapView latitudeLongitudeBoundingBoxForTile:tile]]) && ! [self.textures objectForKey:@(tileKey)]);
+
+                            if (tileStillNeeded && tileImage)
+                            {
+                                CFBridgingRetain((id)tileImage.CGImage);
+
+                                [[[GLKTextureLoader alloc] initWithSharegroup:self.context.sharegroup] textureWithCGImage:tileImage.CGImage
+                                                                                                                  options:@{ GLKTextureLoaderOriginBottomLeft : @YES }
+                                                                                                                    queue:nil
+                                                                                                        completionHandler:^(GLKTextureInfo *textureInfo, NSError *outError)
+                                                                                                        {
+                                                                                                            if (textureInfo)
+                                                                                                            {
+                                                                                                                [self.textures setObject:textureInfo forKey:@(tileKey)];
+
+                                                                                                                [self display];
+                                                                                                            }
+
+                                                                                                            CFBridgingRelease(tileImage.CGImage);
+                                                                                                        }];
+                            }
                         });
 
-                        if (tileStillNeeded && tileImage)
-                        {
-                            dispatch_async(self.textureQueue, ^(void)
-                            {
-                                [EAGLContext setCurrentContext:self.textureContext];
-
-                                GLKTextureInfo *texture = [GLKTextureLoader textureWithCGImage:tileImage.CGImage
-                                                                                       options:@{ GLKTextureLoaderOriginBottomLeft : @YES }
-                                                                                         error:nil];
-
-                                [EAGLContext setCurrentContext:nil];
-
-                                if (texture)
-                                {
-                                    dispatch_async(dispatch_get_main_queue(), ^(void)
-                                    {
-                                        [self.textures setObject:texture forKey:@(tileKey)];
-
-                                        [self display];
-                                    });
-                                }
-                            });
-                        }
                     });
                 }
             }
