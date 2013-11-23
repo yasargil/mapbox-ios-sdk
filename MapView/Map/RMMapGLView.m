@@ -239,7 +239,7 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    NSUInteger index = 0;
+    GLint index = 0;
 
     for (NSUInteger c = 0; c < self.tileColumns; c++)
     {
