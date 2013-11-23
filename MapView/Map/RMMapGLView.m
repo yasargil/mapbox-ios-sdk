@@ -82,7 +82,7 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 
     _tileColumns = 3;
-    _tileRows    = 3;
+    _tileRows    = 4;
 
     CGSize tileSize = CGSizeMake(2.0 / _tileColumns, 2.0 / _tileRows);
 
@@ -289,12 +289,6 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
             }
         }
     }
-
-    // adjust aspect ratio
-    //
-    self.baseEffect.transform.projectionMatrix = GLKMatrix4MakeScale(1.0f,
-                                                                     (GLfloat)self.drawableWidth / (GLfloat)self.drawableHeight,
-                                                                     1.0f);
 }
 
 @end
