@@ -38,6 +38,7 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 @property NSUInteger tileRows;
 @property GLuint bufferName;
 @property RMTile lastTile;
+@property GLKTextureInfo *blankTexture;
 @property NSMutableDictionary *textures;
 
 @end
@@ -79,7 +80,7 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
     _baseEffect.useConstantColor = GL_TRUE;
     _baseEffect.constantColor = GLKVector4Make(1.0f, 1.0f, 1.0f, 1.0f);
 
-    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     _tileColumns = 3;
     _tileRows    = 4;
@@ -249,44 +250,53 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 
             GLKTextureInfo *texture = [self.textures objectForKey:@(tileKey)];
 
-            if (texture)
+            if ( ! texture)
             {
-                self.baseEffect.texture2d0.name   = texture.name;
-                self.baseEffect.texture2d0.target = texture.target;
+                if ( ! self.blankTexture)
+                {
+                    self.blankTexture = [GLKTextureLoader textureWithCGImage:[[RMMapView resourceImageNamed:@"LoadingTile6.png"] CGImage]
+                                                                     options:@{ GLKTextureLoaderOriginBottomLeft : @YES }
+                                                                       error:nil];
+                }
 
-                [self.baseEffect prepareToDraw];
-
-                // 4
-                //
-                glEnableVertexAttribArray(GLKVertexAttribPosition);
-
-                // 5
-                //
-                glVertexAttribPointer(GLKVertexAttribPosition,                 // use position attribute
-                                      3,                                       // number of coordinates per attribute
-                                      GL_FLOAT,                                // data is floating point
-                                      GL_FALSE,                                // no fixed point scaling
-                                      sizeof(SceneVertex),                     // total bytes per vertex
-                                      NULL + offsetof(SceneVertex, position)); // offset in each vertex for position
-
-                // 4 and 5 again for texture
-                //
-                glEnableVertexAttribArray(GLKVertexAttribTexCoord0);
-                glVertexAttribPointer(GLKVertexAttribTexCoord0,
-                                      2,
-                                      GL_FLOAT,
-                                      GL_FALSE,
-                                      sizeof(SceneVertex),
-                                      NULL + offsetof(SceneVertex, texture));
-
-                // 6
-                //
-                glDrawArrays(GL_TRIANGLES, // draw mode
-                             index * 6,    // start vertex index
-                             6);           // vertex count (1 tile * 2 triangles * 3 vertices)
-
-                index++;
+                texture = self.blankTexture;
             }
+
+            self.baseEffect.texture2d0.name   = texture.name;
+            self.baseEffect.texture2d0.target = texture.target;
+
+            [self.baseEffect prepareToDraw];
+
+            // 4
+            //
+            glEnableVertexAttribArray(GLKVertexAttribPosition);
+
+            // 5
+            //
+            glVertexAttribPointer(GLKVertexAttribPosition,                 // use position attribute
+                                  3,                                       // number of coordinates per attribute
+                                  GL_FLOAT,                                // data is floating point
+                                  GL_FALSE,                                // no fixed point scaling
+                                  sizeof(SceneVertex),                     // total bytes per vertex
+                                  NULL + offsetof(SceneVertex, position)); // offset in each vertex for position
+
+            // 4 and 5 again for texture
+            //
+            glEnableVertexAttribArray(GLKVertexAttribTexCoord0);
+            glVertexAttribPointer(GLKVertexAttribTexCoord0,
+                                  2,
+                                  GL_FLOAT,
+                                  GL_FALSE,
+                                  sizeof(SceneVertex),
+                                  NULL + offsetof(SceneVertex, texture));
+
+            // 6
+            //
+            glDrawArrays(GL_TRIANGLES, // draw mode
+                         index * 6,    // start vertex index
+                         6);           // vertex count (1 tile * 2 triangles * 3 vertices)
+
+            index++;
         }
     }
 }
