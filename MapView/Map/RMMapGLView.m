@@ -214,7 +214,7 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 
                         dispatch_sync(dispatch_get_main_queue(), ^(void)
                         {
-                            tileStillNeeded = RMProjectedRectIntersectsProjectedRect([self.mapView projectedBounds], [self.mapView projectedRectFromLatitudeLongitudeBounds:[self.mapView latitudeLongitudeBoundingBoxForTile:tile]]);
+                            tileStillNeeded = (RMProjectedRectIntersectsProjectedRect([self.mapView projectedBounds], [self.mapView projectedRectFromLatitudeLongitudeBounds:[self.mapView latitudeLongitudeBoundingBoxForTile:tile]]) && ! [self.textures objectForKey:@(tileKey)]);
                         });
 
                         if (tileStillNeeded && tileImage)
