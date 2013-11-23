@@ -38,7 +38,8 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 @property NSUInteger tileRows;
 @property GLuint bufferName;
 @property RMTile lastTile;
-@property NSOperationQueue *tileQueue;
+@property dispatch_queue_t textureQueue;
+@property EAGLContext *textureContext;
 @property NSMutableDictionary *textures;
 
 @end
@@ -73,8 +74,8 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
     _mapView = aMapView;
     _tileSource = aTileSource;
 
-    self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-
+    self.context    = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+    _textureContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2 sharegroup:self.context.sharegroup];
     [EAGLContext setCurrentContext:self.context];
 
     _baseEffect = [GLKBaseEffect new];
@@ -129,7 +130,7 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
                  triangles,        // address of bytes to copy
                  GL_DYNAMIC_DRAW); // cache in GPU memory
 
-    _tileQueue = [NSOperationQueue new];
+    _textureQueue = dispatch_queue_create("com.mapbox.texture", DISPATCH_QUEUE_SERIAL);
 
     _textures = [NSMutableDictionary dictionary];
 
@@ -144,6 +145,10 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
         _bufferName = 0;
     }
 
+    dispatch_release(_textureQueue);
+
+    [EAGLContext setCurrentContext:_textureContext];
+    _textureContext = nil;
     [EAGLContext setCurrentContext:self.context];
     self.context = nil;
     [EAGLContext setCurrentContext:nil];
@@ -201,29 +206,41 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 
                 if ( ! [self.textures objectForKey:@(tileKey)])
                 {
-                    [self.tileQueue addOperationWithBlock:^(void)
+                    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void)
                     {
                         UIImage *tileImage = [self.tileSource imageForTile:tile inCache:self.mapView.tileCache];
 
-                        if (RMProjectedRectIntersectsProjectedRect([self.mapView projectedBounds], [self.mapView projectedRectFromLatitudeLongitudeBounds:[self.mapView latitudeLongitudeBoundingBoxForTile:tile]]) && tileImage)
+                        __block BOOL tileStillNeeded;
+
+                        dispatch_sync(dispatch_get_main_queue(), ^(void)
                         {
-                            dispatch_async(dispatch_get_main_queue(), ^(void)
+                            tileStillNeeded = RMProjectedRectIntersectsProjectedRect([self.mapView projectedBounds], [self.mapView projectedRectFromLatitudeLongitudeBounds:[self.mapView latitudeLongitudeBoundingBoxForTile:tile]]);
+                        });
+
+                        if (tileStillNeeded && tileImage)
+                        {
+                            dispatch_async(self.textureQueue, ^(void)
                             {
-                                [EAGLContext setCurrentContext:self.context];
+                                [EAGLContext setCurrentContext:self.textureContext];
 
                                 GLKTextureInfo *texture = [GLKTextureLoader textureWithCGImage:tileImage.CGImage
                                                                                        options:@{ GLKTextureLoaderOriginBottomLeft : @YES }
                                                                                          error:nil];
 
+                                [EAGLContext setCurrentContext:nil];
+
                                 if (texture)
                                 {
-                                    [self.textures setObject:texture forKey:@(tileKey)];
+                                    dispatch_async(dispatch_get_main_queue(), ^(void)
+                                    {
+                                        [self.textures setObject:texture forKey:@(tileKey)];
 
-                                    [self display];
+                                        [self display];
+                                    });
                                 }
                             });
                         }
-                    }];
+                    });
                 }
             }
         }
