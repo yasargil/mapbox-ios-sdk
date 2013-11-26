@@ -82,32 +82,8 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    _tileColumns = 3;
-    _tileRows    = 4;
-
-    CGSize tileSize = CGSizeMake(2.0 / _tileColumns, 2.0 / _tileRows);
-
-    SceneTriangle triangles[(_tileColumns * _tileRows * 2)];
-
-    NSUInteger index = 0;
-
-    for (NSUInteger c = 0; c < _tileColumns; c++)
-    {
-        for (NSUInteger r = 0; r < _tileRows; r++)
-        {
-            // assume origin at lower left & 2.0 for height/width, then substract 1.0 off
-            //
-            SceneVertex tileVertexSW = {{((CGFloat)c * tileSize.width) - 1.0, ((CGFloat)r * tileSize.height) - 1.0, 0}, {0, 0}};
-            SceneVertex tileVertexSE = {{tileVertexSW.position.v[0] + tileSize.width, tileVertexSW.position.v[1], 0}, {1, 0}};
-            SceneVertex tileVertexNW = {{tileVertexSW.position.v[0], tileVertexSW.position.v[1] + tileSize.height, 0}, {0, 1}};
-            SceneVertex tileVertexNE = {{tileVertexSE.position.v[0], tileVertexNW.position.v[1], 0}, {1, 1}};
-
-            triangles[index]       = SceneTriangleMake(tileVertexSE, tileVertexSW, tileVertexNW);
-            triangles[(index + 1)] = SceneTriangleMake(tileVertexSE, tileVertexNW, tileVertexNE);
-
-            index += 2;
-        }
-    }
+    _tileColumns = (NSUInteger)ceilf(self.bounds.size.width  / 256);
+    _tileRows    = (NSUInteger)ceilf(self.bounds.size.height / 256);
 
     // 1
     //
@@ -116,17 +92,6 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
     // 2
     //
     glBindBuffer(GL_ARRAY_BUFFER, _bufferName);
-
-    // 3
-    //
-    GLsizei    vertexCount     = sizeof(triangles) / sizeof(SceneVertex);
-    GLsizeiptr stride          = sizeof(SceneVertex);
-    GLsizeiptr bufferSizeBytes = stride * vertexCount;
-
-    glBufferData(GL_ARRAY_BUFFER,  // initialize buffer
-                 bufferSizeBytes,  // number of bytes to copy
-                 triangles,        // address of bytes to copy
-                 GL_DYNAMIC_DRAW); // cache in GPU memory
 
     _textures = [NSMutableDictionary dictionary];
 
@@ -233,6 +198,8 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
         }
 
         self.lastTile = topLeftTile;
+
+        [self display];
     }
 }
 
@@ -240,14 +207,18 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    GLint index = 0;
+    GLint tileIndex = 0;
 
+    // layout each screen tile
+    //
     for (NSUInteger c = 0; c < self.tileColumns; c++)
     {
         for (NSUInteger r = 0; r < self.tileRows; r++)
         {
             uint64_t tileKey = RMTileKey(RMTileMake(self.lastTile.x + c, self.lastTile.y - r, self.lastTile.zoom));
 
+            // load blank texture to start
+            //
             GLKTextureInfo *texture = [self.textures objectForKey:@(tileKey)];
 
             if ( ! texture)
@@ -267,12 +238,46 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 
             [self.baseEffect prepareToDraw];
 
-            // 4
+            // update scene triangles
+            //
+            CGSize tileSize = CGSizeMake(2.0 / (self.tileColumns), 2.0 / self.tileRows);
+
+            SceneTriangle triangles[(self.tileColumns * self.tileRows * 2)];
+
+            NSUInteger triangleIndex = 0;
+
+            for (NSUInteger c = 0; c < self.tileColumns; c++)
+            {
+                for (NSUInteger r = 0; r < self.tileRows; r++)
+                {
+                    // assume origin at lower left & 2.0 for height/width, then substract 1.0 off
+                    //
+                    SceneVertex tileVertexSW = {{((CGFloat)c * tileSize.width) - 1.0, ((CGFloat)r * tileSize.height) - 1.0, 0}, {0, 0}};
+                    SceneVertex tileVertexSE = {{tileVertexSW.position.v[0] + tileSize.width, tileVertexSW.position.v[1], 0}, {1, 0}};
+                    SceneVertex tileVertexNW = {{tileVertexSW.position.v[0], tileVertexSW.position.v[1] + tileSize.height, 0}, {0, 1}};
+                    SceneVertex tileVertexNE = {{tileVertexSE.position.v[0], tileVertexNW.position.v[1], 0}, {1, 1}};
+
+                    triangles[triangleIndex]       = SceneTriangleMake(tileVertexSE, tileVertexSW, tileVertexNW);
+                    triangles[(triangleIndex + 1)] = SceneTriangleMake(tileVertexSE, tileVertexNW, tileVertexNE);
+
+                    triangleIndex += 2;
+                }
+            }
+
+            // 3
+            //
+            GLsizei    vertexCount     = sizeof(triangles) / sizeof(SceneVertex);
+            GLsizeiptr stride          = sizeof(SceneVertex);
+            GLsizeiptr bufferSizeBytes = stride * vertexCount;
+
+            glBufferData(GL_ARRAY_BUFFER,  // initialize buffer
+                         bufferSizeBytes,  // number of bytes to copy
+                         triangles,        // address of bytes to copy
+                         GL_DYNAMIC_DRAW); // cache in GPU memory
+
+            // 4 & 5 for position
             //
             glEnableVertexAttribArray(GLKVertexAttribPosition);
-
-            // 5
-            //
             glVertexAttribPointer(GLKVertexAttribPosition,                 // use position attribute
                                   3,                                       // number of coordinates per attribute
                                   GL_FLOAT,                                // data is floating point
@@ -280,7 +285,7 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
                                   sizeof(SceneVertex),                     // total bytes per vertex
                                   NULL + offsetof(SceneVertex, position)); // offset in each vertex for position
 
-            // 4 and 5 again for texture
+            // 4 & 5 again for texture
             //
             glEnableVertexAttribArray(GLKVertexAttribTexCoord0);
             glVertexAttribPointer(GLKVertexAttribTexCoord0,
@@ -292,11 +297,11 @@ static SceneTriangle SceneTriangleMake(const SceneVertex vertexA, const SceneVer
 
             // 6
             //
-            glDrawArrays(GL_TRIANGLES, // draw mode
-                         index * 6,    // start vertex index
-                         6);           // vertex count (1 tile * 2 triangles * 3 vertices)
+            glDrawArrays(GL_TRIANGLES,  // draw mode
+                         tileIndex * 6, // start vertex index
+                         6);            // vertex count (1 tile * 2 triangles * 3 vertices)
 
-            index++;
+            tileIndex++;
         }
     }
 }
