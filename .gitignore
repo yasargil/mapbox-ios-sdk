@@ -8,8 +8,6 @@ build
 !default.mode2v3
 *.perspectivev3
 !default.perspectivev3
-*.xcworkspace
-!default.xcworkspace
 xcuserdata
 profile
 *.moved-aside
@@ -29,3 +27,5 @@ Icon?
 Docs
 CocoaPods
 _site
+
+Pods/
