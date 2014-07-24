@@ -180,6 +180,9 @@
     double _metersPerPixel;
     float _zoom, _lastZoom;
     CGPoint _lastContentOffset, _accumulatedDelta;
+    CGPoint _lastTranslation;
+    CGPoint _targetContentOffset;
+
     CGSize _lastContentSize;
     BOOL _mapScrollViewIsZooming;
 
@@ -411,6 +414,32 @@
 
         self.minZoom = 0; // force new minZoom calculation
 
+        if (_loadingTileView)
+            _loadingTileView.mapZooming = NO;
+    }
+}
+
+- (void)setBounds:(CGRect)bounds
+{
+    CGRect r = self.bounds;
+    [super setBounds:bounds];
+    
+    // only change if the frame changes and not during initialization
+    if ( ! CGRectEqualToRect(r, bounds))
+    {
+        RMProjectedPoint centerPoint = self.centerProjectedPoint;
+        
+        //CGRect boundss = CGRectMake(0, 0, bounds.size.width, bounds.size.height);
+        _backgroundView.frame = bounds;
+        _mapScrollView.frame = bounds;
+        _overlayView.frame = bounds;
+        
+        [self setCenterProjectedPoint:centerPoint animated:NO];
+        
+        [self correctPositionOfAllAnnotations];
+        
+        self.minZoom = 0; // force new minZoom calculation
+        
         if (_loadingTileView)
             _loadingTileView.mapZooming = NO;
     }
@@ -1309,6 +1338,8 @@
     _mapScrollView.contentOffset = CGPointMake(0.0, 0.0);
     _mapScrollView.clipsToBounds = NO;
 
+    [_mapScrollView.panGestureRecognizer addTarget:self action:@selector(didScrollMap:)];
+    
     _tiledLayersSuperview = [[UIView alloc] initWithFrame:CGRectMake(0.0, 0.0, contentSize.width, contentSize.height)];
     _tiledLayersSuperview.userInteractionEnabled = NO;
 
@@ -1325,6 +1356,7 @@
 
     _lastZoom = [self zoom];
     _lastContentOffset = _mapScrollView.contentOffset;
+    _lastTranslation = CGPointZero;
     _accumulatedDelta = CGPointMake(0.0, 0.0);
     _lastContentSize = _mapScrollView.contentSize;
 
@@ -1345,7 +1377,9 @@
     [self insertSubview:_overlayView aboveSubview:_mapScrollView];
 
     // add gesture recognizers
-
+    for (UIGestureRecognizer *rec in self.gestureRecognizers) {
+        [self removeGestureRecognizer:rec];
+    }
     // one finger taps
     UITapGestureRecognizer *doubleTapRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleDoubleTap:)];
     doubleTapRecognizer.numberOfTouchesRequired = 1;
@@ -1535,15 +1569,39 @@
     *aContentSize = CGSizeMake((*aContentSize).width * factor, (*aContentSize).height * factor);
 }
 
+-(void)didScrollMap:(UIPanGestureRecognizer *)recognizer {
+    if (recognizer.state == UIGestureRecognizerStateBegan) {
+        _lastTranslation = [_mapScrollView.panGestureRecognizer translationInView:_mapScrollView];
+    } else if (recognizer.state == UIGestureRecognizerStateChanged) {
+        
+    } else {
+        _lastTranslation = CGPointZero;
+    }
+}
+
+-(void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset {
+    _targetContentOffset = *targetContentOffset;
+}
+
+#define CLAMP(x, low, high) ({\
+__typeof__(x) __x = (x); \
+__typeof__(low) __low = (low);\
+__typeof__(high) __high = (high);\
+__x > __high ? __high : (__x < __low ? __low : __x);\
+})
+
+
 - (void)observeValueForKeyPath:(NSString *)aKeyPath ofObject:(id)anObject change:(NSDictionary *)change context:(void *)context
 {
+    
+  
     NSValue *oldValue = [change objectForKey:NSKeyValueChangeOldKey],
             *newValue = [change objectForKey:NSKeyValueChangeNewKey];
 
     CGPoint oldContentOffset = [oldValue CGPointValue],
             newContentOffset = [newValue CGPointValue];
 
-    if (CGPointEqualToPoint(oldContentOffset, newContentOffset))
+    if (CGPointEqualToPoint(oldContentOffset, newContentOffset) && ![_mapScrollView isDragging])
         return;
 
     // The first offset during zooming out (animated) is always garbage
@@ -1554,7 +1612,6 @@
     {
         _lastContentOffset = _mapScrollView.contentOffset;
         _lastContentSize = _mapScrollView.contentSize;
-
         return;
     }
 
@@ -1573,10 +1630,42 @@
 
     if (_zoom == _lastZoom)
     {
-        CGPoint contentOffset = _mapScrollView.contentOffset;
-        CGPoint delta = CGPointMake(_lastContentOffset.x - contentOffset.x, _lastContentOffset.y - contentOffset.y);
-        _accumulatedDelta.x += delta.x;
-        _accumulatedDelta.y += delta.y;
+       
+
+        if (_zoom > 16 && [_mapScrollView isDragging] && ![_mapScrollView isDecelerating]) {
+        
+            CGPoint translation = [_mapScrollView.panGestureRecognizer translationInView:_mapScrollView];
+            CGPoint transDelta = CGPointMake(_lastTranslation.x - translation.x, _lastTranslation.y - translation.y);
+
+            _lastTranslation = translation;
+        
+
+            _accumulatedDelta.x -= transDelta.x;
+            _accumulatedDelta.y -= transDelta.y;
+        } else if (_zoom > 16 && _mapScrollView.isDecelerating) {
+           
+            CGPoint contentOffset = _mapScrollView.contentOffset;
+            CGPoint delta = CGPointMake(_lastContentOffset.x - contentOffset.x, _lastContentOffset.y - contentOffset.y);
+            /*
+            if (CGPointEqualToPoint(delta, CGPointZero)) {
+                delta = CGPointMake(_targetContentOffset.x - contentOffset.x, _targetContentOffset.y - contentOffset.y);
+                delta = CGPointMake(CLAMP(delta.x , -1, +1),  CLAMP(delta.y, -1, +1));
+                
+            }
+            */
+            _accumulatedDelta.x += delta.x;
+            _accumulatedDelta.y += delta.y;
+            
+        } else {
+            
+            CGPoint contentOffset = _mapScrollView.contentOffset;
+            CGPoint delta = CGPointMake(_lastContentOffset.x - contentOffset.x, _lastContentOffset.y - contentOffset.y);
+            _accumulatedDelta.x += delta.x;
+            _accumulatedDelta.y += delta.y;
+        }
+        
+        
+        
 
         if (fabsf(_accumulatedDelta.x) < kZoomRectPixelBuffer && fabsf(_accumulatedDelta.y) < kZoomRectPixelBuffer)
         {
@@ -1590,9 +1679,11 @@
             else
                 [self correctPositionOfAllAnnotations];
         }
+
     }
     else
     {
+        
         [self correctPositionOfAllAnnotationsIncludingInvisibles:NO animated:(_mapScrollViewIsZooming && !_mapScrollView.zooming)];
 
         if (_currentAnnotation && ! [_currentAnnotation isKindOfClass:[RMMarker class]])
@@ -1615,7 +1706,7 @@
 
     _lastContentOffset = _mapScrollView.contentOffset;
     _lastContentSize = _mapScrollView.contentSize;
-
+    
     if (_delegateHasMapViewRegionDidChange)
         [_delegate mapViewRegionDidChange:self];
 }
@@ -1841,6 +1932,8 @@
     }
     else if (_delegateHasLongPressOnMap)
     {
+        NSLog(@"%@",recognizer);
+
         // pass map long-press to delegate
         //
         [_delegate longPressOnMap:self at:[recognizer locationInView:self]];
@@ -2472,6 +2565,7 @@
 //    RMLog(@"New maxZoom:%f", newMaxZoom);
 
     _mapScrollView.maximumZoomScale = exp2f(newMaxZoom);
+    RMLog(@"MaxZoom %f,",_mapScrollView.maximumZoomScale );
 }
 
 - (float)tileSourcesMaxZoom
@@ -3050,7 +3144,7 @@
     }
 
     [self correctOrderingOfAllAnnotations];
-
+    [self updateAnnotationsVisibility];
     [CATransaction commit];
 }
 
@@ -3091,27 +3185,49 @@
         if ( ! [annotation1.layer isKindOfClass:[RMMarker class]] &&   [annotation2.layer isKindOfClass:[RMMarker class]])
             return NSOrderedAscending;
 
+        if (annotation1.zGroup > annotation2.zGroup) {
+            return NSOrderedDescending;
+        } else if (annotation1.zGroup < annotation2.zGroup) {
+            return NSOrderedAscending;
+        }
         // the rest in increasing y-position
         //
         CGPoint obj1Point = [self convertPoint:annotation1.position fromView:_overlayView];
         CGPoint obj2Point = [self convertPoint:annotation2.position fromView:_overlayView];
 
         if (obj1Point.y > obj2Point.y)
-            return NSOrderedDescending;
+            return NSOrderedAscending;
 
         if (obj1Point.y < obj2Point.y)
-            return NSOrderedAscending;
+            return NSOrderedDescending;
 
         return NSOrderedSame;
     }];
 
-    for (CGFloat i = 0; i < [sortedAnnotations count]; i++)
-        ((RMAnnotation *)[sortedAnnotations objectAtIndex:i]).layer.zPosition = (CGFloat)i;
-
+    for (CGFloat i = 0; i < [sortedAnnotations count]; i++) {
+        RMAnnotation *annotation = (RMAnnotation *)[sortedAnnotations objectAtIndex:i];
+        annotation.layer.zPosition = (CGFloat)i;
+        
+      
+      
+        
+    }
     // bring any active callout annotation to the front
     //
     if (_currentAnnotation)
         _currentAnnotation.layer.zPosition = _currentCallout.layer.zPosition = MAXFLOAT;
+    
+}
+
+-(void)updateAnnotationsVisibility {
+    for (RMAnnotation *annotation in [_visibleAnnotations allObjects]) {
+        if (self.zoom < annotation.maxVisibleZoom) {
+            [annotation.layer setHidden:YES];
+        } else {
+            [annotation.layer setHidden:NO];
+        }
+    }
+    NSLog(@"Zoom %f",self.zoom);
 }
 
 - (NSArray *)annotations
@@ -3153,6 +3269,7 @@
         }
 
         [self correctOrderingOfAllAnnotations];
+        [self updateAnnotationsVisibility];
     }
 }
 
