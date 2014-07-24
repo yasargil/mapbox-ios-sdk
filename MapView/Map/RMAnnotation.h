@@ -150,6 +150,12 @@
 /** Whether the annotation is currently visible on the screen. An annotation is not visible if it is either offscreen or currently in a cluster. */
 @property (nonatomic, readonly) BOOL isAnnotationVisibleOnScreen;
 
+/** Manually adjust the z ordering of annotations*/
+@property (nonatomic, assign) NSUInteger zGroup;
+
+
+/** Manually adjust the z ordering of annotations*/
+@property (nonatomic, assign) NSUInteger maxVisibleZoom;
 #pragma mark -
 
 - (void)setPosition:(CGPoint)position animated:(BOOL)animated;
