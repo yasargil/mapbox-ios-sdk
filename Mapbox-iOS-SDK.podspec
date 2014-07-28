@@ -1,13 +1,14 @@
 Pod::Spec.new do |m|
 
-  m.name    = 'Mapbox'
-  m.version = '1.1.2'
 
-  m.summary     = 'Open source alternative to MapKit.'
-  m.description = 'Open source alternative to MapKit supporting custom tile sources, offline use, and complete cache control.'
-  m.homepage    = 'http://mapbox.com/mobile'
+  m.name    = 'Mapbox-iOS-SDK'
+  m.version = '1.2.0'
+
+  m.summary     = 'An open source toolset for building mapping applications for iOS devices.'
+  m.description = 'An open source toolset for building mapping applications for iOS devices with great flexibility for visual styling, offline use, and customizability.'
+  m.homepage    = 'http://mapbox.com/mapbox-ios-sdk'
   m.license     = 'BSD'
-  m.author      = { 'Mapbox' => 'ios@mapbox.com' }
+  m.author      = { 'Mapbox' => 'mobile@mapbox.com' }
   m.screenshot  = 'https://raw.github.com/mapbox/mapbox-ios-sdk/packaging/screenshot.png'
 
   m.source = { :git => 'https://github.com/yasargil/mapbox-ios-sdk.git', :tag => m.version.to_s }
@@ -31,10 +32,13 @@ Pod::Spec.new do |m|
 
   m.xcconfig = { 'OTHER_LDFLAGS' => '-ObjC', 'LIBRARY_SEARCH_PATHS' => '"${PODS_ROOT}/Mapbox/Proj4"' }
 
-  m.preserve_paths = 'Proj4/libProj4.a', 'MapView/MapView.xcodeproj', 'MapView/Map/Resources'
+  m.preserve_paths = 'MapView/MapView.xcodeproj', 'MapView/Map/Resources'
+
+
+  m.vendored_libraries = 'Proj4/libProj4.a'
 
   m.dependency 'FMDB/standalone', '~> 2.3'
   m.dependency 'GRMustache', '6.8.3'
-  m.dependency 'SMCalloutView', '1.1'
+  m.dependency 'SMCalloutView', '2.0'
 
 end
