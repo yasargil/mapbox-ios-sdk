@@ -158,6 +158,7 @@
     BOOL _delegateHasDidUpdateUserLocation;
     BOOL _delegateHasDidFailToLocateUserWithError;
     BOOL _delegateHasDidChangeUserTrackingMode;
+    BOOL _delegateHasCalloutViewForAnnotation;
 
     UIView *_backgroundView;
     RMMapScrollView *_mapScrollView;
@@ -724,6 +725,7 @@
     _delegateHasDidUpdateUserLocation = [_delegate respondsToSelector:@selector(mapView:didUpdateUserLocation:)];
     _delegateHasDidFailToLocateUserWithError = [_delegate respondsToSelector:@selector(mapView:didFailToLocateUserWithError:)];
     _delegateHasDidChangeUserTrackingMode = [_delegate respondsToSelector:@selector(mapView:didChangeUserTrackingMode:animated:)];
+    _delegateHasCalloutViewForAnnotation =[_delegate respondsToSelector:@selector(mapView:calloutViewForAnnotation:)];
 }
 
 - (void)registerMoveEventByUser:(BOOL)wasUserEvent
@@ -1848,7 +1850,7 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
 
     CALayer *hit = _draggedAnnotation.layer;
 
-    if ( ! _draggedAnnotation)
+    if ( ! _draggedAnnotation && recognizer.state == UIGestureRecognizerStateBegan)
     {
         hit = [_overlayView overlayHitTest:[recognizer locationInView:self]];
 
@@ -1991,35 +1993,40 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
 
         if (anAnnotation.layer.canShowCallout && anAnnotation.title)
         {
-            _currentCallout = [SMCalloutView platformCalloutView];
+            if (_delegateHasCalloutViewForAnnotation) {
+            
+                _currentCallout = [self.delegate mapView:self calloutViewForAnnotation:anAnnotation];
+            } else {
+                _currentCallout = [SMCalloutView platformCalloutView];
+                if (RMPostVersion7)
+                    _currentCallout.tintColor = self.tintColor;
+                
+                _currentCallout.title    = anAnnotation.title;
+                _currentCallout.subtitle = anAnnotation.subtitle;
+                
+                _currentCallout.calloutOffset = anAnnotation.layer.calloutOffset;
 
-            if (RMPostVersion7)
-                _currentCallout.tintColor = self.tintColor;
+                if (anAnnotation.layer.leftCalloutAccessoryView)
+                {
+                    if ([anAnnotation.layer.leftCalloutAccessoryView isKindOfClass:[UIControl class]])
+                        [anAnnotation.layer.leftCalloutAccessoryView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOnCalloutAccessoryWithGestureRecognizer:)]];
+                    
+                    _currentCallout.leftAccessoryView = anAnnotation.layer.leftCalloutAccessoryView;
+                }
+                
+                if (anAnnotation.layer.rightCalloutAccessoryView)
+                {
+                    if ([anAnnotation.layer.rightCalloutAccessoryView isKindOfClass:[UIControl class]])
+                        [anAnnotation.layer.rightCalloutAccessoryView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOnCalloutAccessoryWithGestureRecognizer:)]];
+                    
+                    _currentCallout.rightAccessoryView = anAnnotation.layer.rightCalloutAccessoryView;
+                }
+   
+                _currentCallout.permittedArrowDirection = SMCalloutArrowDirectionDown;
+                _currentCallout.delegate = self;
 
-            _currentCallout.title    = anAnnotation.title;
-            _currentCallout.subtitle = anAnnotation.subtitle;
-
-            _currentCallout.calloutOffset = anAnnotation.layer.calloutOffset;
-
-            if (anAnnotation.layer.leftCalloutAccessoryView)
-            {
-                if ([anAnnotation.layer.leftCalloutAccessoryView isKindOfClass:[UIControl class]])
-                    [anAnnotation.layer.leftCalloutAccessoryView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOnCalloutAccessoryWithGestureRecognizer:)]];
-
-                _currentCallout.leftAccessoryView = anAnnotation.layer.leftCalloutAccessoryView;
             }
-
-            if (anAnnotation.layer.rightCalloutAccessoryView)
-            {
-                if ([anAnnotation.layer.rightCalloutAccessoryView isKindOfClass:[UIControl class]])
-                    [anAnnotation.layer.rightCalloutAccessoryView addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOnCalloutAccessoryWithGestureRecognizer:)]];
-
-                _currentCallout.rightAccessoryView = anAnnotation.layer.rightCalloutAccessoryView;
-            }
-
-            _currentCallout.delegate = self;
-
-            _currentCallout.permittedArrowDirection = SMCalloutArrowDirectionDown;
+            
 
             [_currentCallout presentCalloutFromRect:anAnnotation.layer.bounds
                                             inLayer:anAnnotation.layer

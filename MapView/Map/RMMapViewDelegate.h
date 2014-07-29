@@ -30,6 +30,7 @@
 @class RMMarker;
 @class RMAnnotation;
 @class RMUserLocation;
+@class SMCalloutView;
 
 typedef enum : NSUInteger {
     RMMapLayerDragStateNone = 0,
@@ -224,4 +225,12 @@ typedef enum : NSUInteger {
 *   @param animated If YES, the change from the current mode to the new mode is animated; otherwise, it is not. This parameter affects only tracking mode changes. Changes to the user location or heading are always animated. */
 - (void)mapView:(RMMapView *)mapView didChangeUserTrackingMode:(RMUserTrackingMode)mode animated:(BOOL)animated;
 
+/** Returns (after creating or reusing) a calloutview associated with the specified annotation object.
+ *
+ *   If you do not implement this method, or if you return `nil` from your implementation the standard calllout is presented.
+ *
+ *   @param mapView The map view that requested the callout
+ *   @param annotation The object representing the annotation that is clicked.
+ *   @return The callout to display for the specified annotation or `nil` if you want to display the standard callout. */
+-(SMCalloutView *)mapView:(RMMapView *)mapView calloutViewForAnnotation:(RMAnnotation *)annotation;
 @end
