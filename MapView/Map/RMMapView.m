@@ -1993,10 +1993,11 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
 
         if (anAnnotation.layer.canShowCallout && anAnnotation.title)
         {
-            if (_delegateHasCalloutViewForAnnotation) {
             
-                _currentCallout = [self.delegate mapView:self calloutViewForAnnotation:anAnnotation];
-            } else {
+             if (_delegateHasCalloutViewForAnnotation) {
+                 _currentCallout = [self.delegate mapView:self calloutViewForAnnotation:anAnnotation];
+             }
+             if (!_currentCallout) {
                 _currentCallout = [SMCalloutView platformCalloutView];
                 if (RMPostVersion7)
                     _currentCallout.tintColor = self.tintColor;
