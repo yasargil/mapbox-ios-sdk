@@ -6,7 +6,7 @@ PODS:
   - GRMustache (6.8.3):
     - JRSwizzle (~> 1.0)
   - JRSwizzle (1.0)
-  - SMCalloutView (1.1)
+  - SMCalloutView (2.0)
   - sqlite3/common (3.8.6)
   - sqlite3/fts (3.8.6):
     - sqlite3/common
@@ -14,13 +14,13 @@ PODS:
 DEPENDENCIES:
   - FMDB/standalone (~> 2.3)
   - GRMustache (= 6.8.3)
-  - SMCalloutView (= 1.1)
+  - SMCalloutView (= 2.0)
 
 SPEC CHECKSUMS:
   FMDB: 31ec26773c7f7b7890a6038235a1f2bbd933a7cb
   GRMustache: ab96109b7ba4b9568425bea40d6cd2cdc7582b6c
   JRSwizzle: 30da7a2c539a4ebf954b16d15f6dd8221c9f6fa5
-  SMCalloutView: b1c20930f57bc4470f5477979e2decf066397c82
+  SMCalloutView: c1906604d47c058400ade5c9d52ab98aa77b7e76
   sqlite3: 170bf094e597765aaa5d3d312a7b222a6f8ab6f0
 
 COCOAPODS: 0.33.1

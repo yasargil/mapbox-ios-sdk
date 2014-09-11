@@ -2022,7 +2022,7 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
                  _currentCallout = [self.delegate mapView:self calloutViewForAnnotation:anAnnotation];
              }
              if (!_currentCallout) {
-                _currentCallout = [[SMCalloutView alloc] init];
+                _currentCallout = [SMCalloutView platformCalloutView];
                 if (RMPostVersion7)
                     _currentCallout.tintColor = self.tintColor;
                 
@@ -2050,8 +2050,9 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
                 _currentCallout.delegate = self;
             }
             
+            _currentCallout.permittedArrowDirection = SMCalloutArrowDirectionDown;
 
-            [_currentCallout presentCalloutFromRect:anAnnotation.layer.bounds inLayer:anAnnotation.layer constrainedToLayer:self.layer permittedArrowDirections:SMCalloutArrowDirectionDown animated:animated];
+            [_currentCallout presentCalloutFromRect:anAnnotation.layer.bounds inLayer:anAnnotation.layer constrainedToLayer:self.layer animated:animated];
         }
 
         [self correctPositionOfAllAnnotations];
