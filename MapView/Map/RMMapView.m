@@ -66,9 +66,6 @@
 #define kDefaultMaximumZoomLevel 25.0
 #define kDefaultInitialZoomLevel 11.0
 
-#define kRMTrackingHaloAnnotationTypeName   @"RMTrackingHaloAnnotation"
-#define kRMAccuracyCircleAnnotationTypeName @"RMAccuracyCircleAnnotation"
-
 #pragma mark --- end constants ----
 
 @interface RMMapView (PrivateMethods) <UIScrollViewDelegate,
@@ -149,6 +146,7 @@
     BOOL _delegateHasShouldDragAnnotation;
     BOOL _delegateHasDidChangeDragState;
     BOOL _delegateHasLayerForAnnotation;
+    BOOL _delegateHasAnnotationSorting;
     BOOL _delegateHasWillHideLayerForAnnotation;
     BOOL _delegateHasDidHideLayerForAnnotation;
     BOOL _delegateHasDidSelectAnnotation;
@@ -169,6 +167,8 @@
     RMProjection *_projection;
     RMFractalTileProjection *_mercatorToTileProjection;
     RMTileSourcesContainer *_tileSourcesContainer;
+
+    NSMutableArray *_earlyTileSources;
 
     NSMutableSet *_annotations;
     NSMutableSet *_visibleAnnotations;
@@ -303,13 +303,33 @@
         [self setBackgroundView:nil];
     }
 
-    if (initialTileSourceMinZoomLevel < newTilesource.minZoom) initialTileSourceMinZoomLevel = newTilesource.minZoom;
-    if (initialTileSourceMaxZoomLevel > newTilesource.maxZoom) initialTileSourceMaxZoomLevel = newTilesource.maxZoom;
+    if ([_earlyTileSources count])
+    {
+        for (id<RMTileSource>earlyTileSource in _earlyTileSources)
+        {
+            if (initialTileSourceMinZoomLevel < earlyTileSource.minZoom) initialTileSourceMinZoomLevel = earlyTileSource.minZoom;
+            if (initialTileSourceMaxZoomLevel > earlyTileSource.maxZoom) initialTileSourceMaxZoomLevel = earlyTileSource.maxZoom;
+        }
+    }
+    else
+    {
+        if (initialTileSourceMinZoomLevel < newTilesource.minZoom) initialTileSourceMinZoomLevel = newTilesource.minZoom;
+        if (initialTileSourceMaxZoomLevel > newTilesource.maxZoom) initialTileSourceMaxZoomLevel = newTilesource.maxZoom;
+    }
     [self setTileSourcesMinZoom:initialTileSourceMinZoomLevel];
     [self setTileSourcesMaxZoom:initialTileSourceMaxZoomLevel];
     [self setTileSourcesZoom:initialTileSourceZoomLevel];
 
-    [self setTileSource:newTilesource];
+    if ([_earlyTileSources count])
+    {
+        [self setTileSources:_earlyTileSources];
+        [_earlyTileSources removeAllObjects];
+    }
+    else
+    {
+        [self setTileSource:newTilesource];
+    }
+
     [self setCenterCoordinate:initialCenterCoordinate animated:NO];
 
     [self setDecelerationMode:RMMapDecelerationFast];
@@ -382,12 +402,24 @@
     if (!newTilesource || !(self = [super initWithFrame:frame]))
         return nil;
 
+    _earlyTileSources = [NSMutableArray array];
+
     [self performInitializationWithTilesource:newTilesource
                              centerCoordinate:initialCenterCoordinate
                                     zoomLevel:initialZoomLevel
                                  maxZoomLevel:maxZoomLevel
                                  minZoomLevel:minZoomLevel
                               backgroundImage:backgroundImage];
+
+    return self;
+}
+
+- (id)initWithCoder:(NSCoder *)decoder
+{
+    if (![super initWithCoder:decoder])
+        return nil;
+
+    _earlyTileSources = [NSMutableArray array];
 
     return self;
 }
@@ -547,20 +579,17 @@
         if ( ! [[viewController.view valueForKeyPath:@"constraints.firstItem"]  containsObject:container] &&
              ! [[viewController.view valueForKeyPath:@"constraints.secondItem"] containsObject:container])
         {
-            CGFloat topSpacing   = container.frame.origin.y;
-            CGFloat rightSpacing = container.superview.bounds.size.width - container.frame.origin.x;
-
             [viewController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[topLayoutGuide]-topSpacing-[container]"
                                                                                         options:0
-                                                                                        metrics:@{ @"topSpacing" : @(topSpacing) }
+                                                                                        metrics:@{ @"topSpacing"     : @(5) }
                                                                                           views:@{ @"topLayoutGuide" : viewController.topLayoutGuide,
                                                                                                    @"container"      : container }]];
 
 
             [viewController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:[container]-rightSpacing-|"
                                                                                         options:0
-                                                                                        metrics:@{ @"rightSpacing" : @(rightSpacing) }
-                                                                                          views:@{ @"container" : container }]];
+                                                                                        metrics:@{ @"rightSpacing" : @(5) }
+                                                                                          views:@{ @"container"    : container }]];
         }
     }
 
@@ -569,9 +598,6 @@
         if ( ! [[viewController.view valueForKeyPath:@"constraints.firstItem"]  containsObject:_logoBug] &&
              ! [[viewController.view valueForKeyPath:@"constraints.secondItem"] containsObject:_logoBug])
         {
-            CGFloat leftSpacing   = _logoBug.frame.origin.x;
-            CGFloat bottomSpacing = _logoBug.superview.bounds.size.height - _logoBug.frame.origin.y - _logoBug.bounds.size.height;
-
             NSString *formatString;
             NSDictionary *views;
 
@@ -589,12 +615,12 @@
 
             [viewController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:formatString
                                                                                         options:0
-                                                                                        metrics:@{ @"bottomSpacing" : @(bottomSpacing) }
+                                                                                        metrics:@{ @"bottomSpacing" : @(4) }
                                                                                           views:views]];
 
             [viewController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-leftSpacing-[logoBug]"
                                                                                         options:0
-                                                                                        metrics:@{ @"leftSpacing" : @(leftSpacing) }
+                                                                                        metrics:@{ @"leftSpacing" : @(8) }
                                                                                           views:views]];
         }
     }
@@ -604,9 +630,6 @@
         if ( ! [[viewController.view valueForKeyPath:@"constraints.firstItem"]  containsObject:_attributionButton] &&
              ! [[viewController.view valueForKeyPath:@"constraints.secondItem"] containsObject:_attributionButton])
         {
-            CGFloat rightSpacing  = _attributionButton.superview.bounds.size.width - _attributionButton.frame.origin.x - _attributionButton.bounds.size.width;
-            CGFloat bottomSpacing = _attributionButton.superview.bounds.size.height - _attributionButton.frame.origin.y - _attributionButton.bounds.size.height;
-
             NSString *formatString;
             NSDictionary *views;
 
@@ -624,12 +647,12 @@
 
             [viewController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:formatString
                                                                                         options:0
-                                                                                        metrics:@{ @"bottomSpacing" : @(bottomSpacing) }
+                                                                                        metrics:@{ @"bottomSpacing" : @(8) }
                                                                                           views:views]];
 
             [viewController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:[attributionButton]-rightSpacing-|"
                                                                                         options:0
-                                                                                        metrics:@{ @"rightSpacing" : @(rightSpacing) }
+                                                                                        metrics:@{ @"rightSpacing" : @(8) }
                                                                                           views:views]];
         }
     }
@@ -714,6 +737,7 @@
     _delegateHasDidChangeDragState = [_delegate respondsToSelector:@selector(mapView:annotation:didChangeDragState:fromOldState:)];
 
     _delegateHasLayerForAnnotation = [_delegate respondsToSelector:@selector(mapView:layerForAnnotation:)];
+    _delegateHasAnnotationSorting = [_delegate respondsToSelector:@selector(annotationSortingComparatorForMapView:)];
     _delegateHasWillHideLayerForAnnotation = [_delegate respondsToSelector:@selector(mapView:willHideLayerForAnnotation:)];
     _delegateHasDidHideLayerForAnnotation = [_delegate respondsToSelector:@selector(mapView:didHideLayerForAnnotation:)];
 
@@ -1998,7 +2022,7 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
                  _currentCallout = [self.delegate mapView:self calloutViewForAnnotation:anAnnotation];
              }
              if (!_currentCallout) {
-                _currentCallout = [SMCalloutView platformCalloutView];
+                _currentCallout = [[SMCalloutView alloc] init];
                 if (RMPostVersion7)
                     _currentCallout.tintColor = self.tintColor;
                 
@@ -2023,16 +2047,11 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
                     _currentCallout.rightAccessoryView = anAnnotation.layer.rightCalloutAccessoryView;
                 }
    
-                _currentCallout.permittedArrowDirection = SMCalloutArrowDirectionDown;
                 _currentCallout.delegate = self;
-
             }
             
 
-            [_currentCallout presentCalloutFromRect:anAnnotation.layer.bounds
-                                            inLayer:anAnnotation.layer
-                                 constrainedToLayer:self.layer
-                                           animated:animated];
+            [_currentCallout presentCalloutFromRect:anAnnotation.layer.bounds inLayer:anAnnotation.layer constrainedToLayer:self.layer permittedArrowDirections:SMCalloutArrowDirectionDown animated:animated];
         }
 
         [self correctPositionOfAllAnnotations];
@@ -2221,6 +2240,16 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
 
 - (void)setTileSources:(NSArray *)tileSources
 {
+    if ( ! _tileSourcesContainer)
+    {
+        // If we've reached this point, it's because our scroll view etc.
+        // aren't yet setup. So let's remember the tile source(s) set so that
+        // we can apply them later on once we're properly initialized.
+        //
+        [_earlyTileSources setArray:tileSources];
+        return;
+    }
+
     if ( ! [_tileSourcesContainer setTileSources:tileSources])
         return;
 
@@ -2249,6 +2278,16 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
 
 - (void)addTileSource:(id<RMTileSource>)newTileSource atIndex:(NSUInteger)index
 {
+    if ( ! _tileSourcesContainer)
+    {
+        // If we've reached this point, it's because our scroll view etc.
+        // aren't yet setup. So let's remember the tile source(s) set so that
+        // we can apply them later on once we're properly initialized.
+        //
+        [_earlyTileSources insertObject:newTileSource atIndex:(index > [_earlyTileSources count] ? 0 : index)];
+        return;
+    }
+
     if ([_tileSourcesContainer.tileSources containsObject:newTileSource])
         return;
 
@@ -3055,7 +3094,6 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
             if ([annotation.layer isKindOfClass:[RMMarker class]])
                 annotation.layer.transform = _annotationTransform;
 
-            // Use the zPosition property to order the layer hierarchy
             if ( ! [_visibleAnnotations containsObject:annotation])
             {
                 [_overlayView addSublayer:annotation.layer];
@@ -3161,68 +3199,94 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
 
 - (void)correctOrderingOfAllAnnotations
 {
-    if ( ! _orderMarkersByYPosition)
-        return;
-
-    // sort annotation layer z-indexes so that they overlap properly
-    //
     NSMutableArray *sortedAnnotations = [NSMutableArray arrayWithArray:[_visibleAnnotations allObjects]];
 
-    [sortedAnnotations filterUsingPredicate:[NSPredicate predicateWithFormat:@"isUserLocationAnnotation = NO"]];
+    NSComparator comparator;
 
-    [sortedAnnotations sortUsingComparator:^(id obj1, id obj2)
+    if (_delegateHasAnnotationSorting && (comparator = [_delegate annotationSortingComparatorForMapView:self]))
     {
-        RMAnnotation *annotation1 = (RMAnnotation *)obj1;
-        RMAnnotation *annotation2 = (RMAnnotation *)obj2;
-
-        // clusters above/below non-clusters (based on _orderClusterMarkersAboveOthers)
+        // Sort using the custom comparator.
         //
-        if (   annotation1.isClusterAnnotation && ! annotation2.isClusterAnnotation)
-            return (_orderClusterMarkersAboveOthers ? NSOrderedDescending : NSOrderedAscending);
-
-        if ( ! annotation1.isClusterAnnotation &&   annotation2.isClusterAnnotation)
-            return (_orderClusterMarkersAboveOthers ? NSOrderedAscending : NSOrderedDescending);
-
-        // markers above shapes
-        //
-        if (   [annotation1.layer isKindOfClass:[RMMarker class]] && ! [annotation2.layer isKindOfClass:[RMMarker class]])
-            return NSOrderedDescending;
-
-        if ( ! [annotation1.layer isKindOfClass:[RMMarker class]] &&   [annotation2.layer isKindOfClass:[RMMarker class]])
-            return NSOrderedAscending;
-
-        if (annotation1.zGroup > annotation2.zGroup) {
-            return NSOrderedDescending;
-        } else if (annotation1.zGroup < annotation2.zGroup) {
-            return NSOrderedAscending;
-        }
-        // the rest in increasing y-position
-        //
-        CGPoint obj1Point = [self convertPoint:annotation1.position fromView:_overlayView];
-        CGPoint obj2Point = [self convertPoint:annotation2.position fromView:_overlayView];
-
-        if (obj1Point.y > obj2Point.y)
-            return NSOrderedAscending;
-
-        if (obj1Point.y < obj2Point.y)
-            return NSOrderedDescending;
-
-        return NSOrderedSame;
-    }];
-
-    for (CGFloat i = 0; i < [sortedAnnotations count]; i++) {
-        RMAnnotation *annotation = (RMAnnotation *)[sortedAnnotations objectAtIndex:i];
-        annotation.layer.zPosition = (CGFloat)i;
-        
-      
-      
-        
+        [sortedAnnotations sortUsingComparator:comparator];
     }
-    // bring any active callout annotation to the front
+    else
+    {
+        // Sort using the default comparator.
+        //
+        [sortedAnnotations sortUsingComparator:^(RMAnnotation *annotation1, RMAnnotation *annotation2)
+        {
+            // Sort user location annotations below all.
+            //
+            if (   annotation1.isUserLocationAnnotation && ! annotation2.isUserLocationAnnotation)
+                return NSOrderedAscending;
+
+            if ( ! annotation1.isUserLocationAnnotation &&   annotation2.isUserLocationAnnotation)
+                return NSOrderedDescending;
+
+            // Amongst user location annotations, sort properly.
+            //
+            if (annotation1.isUserLocationAnnotation && annotation2.isUserLocationAnnotation)
+            {
+                // User dot on top.
+                //
+                if ([annotation1 isKindOfClass:[RMUserLocation class]])
+                    return NSOrderedDescending;
+
+                if ([annotation2 isKindOfClass:[RMUserLocation class]])
+                    return NSOrderedAscending;
+                // Halo above accuracy circle.
+                //
+                if ([annotation1.annotationType isEqualToString:kRMTrackingHaloAnnotationTypeName])
+                    return NSOrderedDescending;
+                
+                if ([annotation2.annotationType isEqualToString:kRMTrackingHaloAnnotationTypeName])
+                    return NSOrderedAscending;
+            }
+            
+            // Return early if we're not otherwise sorting annotations.
+            //
+            if ( ! _orderMarkersByYPosition)
+                return NSOrderedSame;
+            
+            // Sort clusters above non-clusters (factoring in orderClusterMarkersAboveOthers).
+            //
+            if (   annotation1.isClusterAnnotation && ! annotation2.isClusterAnnotation)
+                return (_orderClusterMarkersAboveOthers ? NSOrderedDescending : NSOrderedAscending);
+            
+            if (   [annotation1.layer isKindOfClass:[RMMarker class]] && ! [annotation2.layer isKindOfClass:[RMMarker class]])
+                return NSOrderedDescending;
+            
+            if ( ! [annotation1.layer isKindOfClass:[RMMarker class]] &&   [annotation2.layer isKindOfClass:[RMMarker class]])
+                return NSOrderedAscending;
+            
+            if (annotation1.zGroup > annotation2.zGroup) {
+                return NSOrderedDescending;
+            } else if (annotation1.zGroup < annotation2.zGroup) {
+                return NSOrderedAscending;
+            }
+            
+            // Sort the rest in increasing y-position.
+            //
+            if (annotation1.absolutePosition.y > annotation2.absolutePosition.y)
+                return NSOrderedDescending;
+            
+            if (annotation1.absolutePosition.y < annotation2.absolutePosition.y)
+                return NSOrderedAscending;
+            
+            return NSOrderedSame;
+        }];
+    }
+    
+    // Apply layering values based on sort order.
     //
+    for (CGFloat i = 0; i < [sortedAnnotations count]; i++)
+        ((RMAnnotation *)[sortedAnnotations objectAtIndex:i]).layer.zPosition = (CGFloat)i;
+    
+    // Bring any active callout annotation to the front.
+    
     if (_currentAnnotation)
         _currentAnnotation.layer.zPosition = _currentCallout.layer.zPosition = MAXFLOAT;
-    
+
 }
 
 -(void)updateAnnotationsVisibility {
@@ -3357,6 +3421,17 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
         self.userLocation = [RMUserLocation annotationWithMapView:self coordinate:CLLocationCoordinate2DMake(MAXFLOAT, MAXFLOAT) andTitle:nil];
 
         _locationManager = [CLLocationManager new];
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
+        // enable iOS 8+ location authorization API
+        //
+        if ([CLLocationManager instancesRespondToSelector:@selector(requestWhenInUseAuthorization)])
+        {
+            NSAssert([[[NSBundle mainBundle] infoDictionary] valueForKey:@"NSLocationWhenInUseUsageDescription"], @"For iOS 8 and above, your app must have a value for NSLocationWhenInUseUsageDescription in its Info.plist");
+            [_locationManager requestWhenInUseAuthorization];
+        }
+#endif
+
         _locationManager.headingFilter = 5.0;
         _locationManager.delegate = self;
         [_locationManager startUpdatingLocation];
@@ -3553,7 +3628,12 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
         self.userLocation.location = newLocation;
 
         if (_delegateHasDidUpdateUserLocation)
+        {
             [_delegate mapView:self didUpdateUserLocation:self.userLocation];
+
+            if ( ! _showsUserLocation)
+                return;
+        }
     }
 
     if (self.userTrackingMode != RMUserTrackingModeNone)
@@ -3606,7 +3686,6 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
         _accuracyCircleAnnotation.clusteringEnabled = NO;
         _accuracyCircleAnnotation.enabled = NO;
         _accuracyCircleAnnotation.layer = [[RMCircle alloc] initWithView:self radiusInMeters:newLocation.horizontalAccuracy];
-        _accuracyCircleAnnotation.layer.zPosition = -MAXFLOAT;
         _accuracyCircleAnnotation.isUserLocationAnnotation = YES;
 
         ((RMCircle *)_accuracyCircleAnnotation.layer).lineColor = (RMPreVersion7 ? [UIColor colorWithRed:0.378 green:0.552 blue:0.827 alpha:0.7] : [UIColor clearColor]);
@@ -3657,7 +3736,6 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
         // create image marker
         //
         _trackingHaloAnnotation.layer = [[RMMarker alloc] initWithUIImage:[self trackingDotHaloImage]];
-        _trackingHaloAnnotation.layer.zPosition = -MAXFLOAT + 1;
         _trackingHaloAnnotation.isUserLocationAnnotation = YES;
 
         [CATransaction begin];
@@ -3729,7 +3807,12 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
     self.userLocation.heading = newHeading;
 
     if (_delegateHasDidUpdateUserLocation)
+    {
         [_delegate mapView:self didUpdateUserLocation:self.userLocation];
+
+        if ( ! _showsUserLocation)
+            return;
+    }
 
     CLLocationDirection headingDirection = (newHeading.trueHeading > 0 ? newHeading.trueHeading : newHeading.magneticHeading);
 
@@ -3907,8 +3990,8 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
         _attributionButton.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin;
         _attributionButton.translatesAutoresizingMaskIntoConstraints = NO;
         [_attributionButton addTarget:self action:@selector(showAttribution:) forControlEvents:UIControlEventTouchUpInside];
-        _attributionButton.frame = CGRectMake(self.bounds.size.width  - 30,
-                                              self.bounds.size.height - 30,
+        _attributionButton.frame = CGRectMake(self.bounds.size.width - _attributionButton.bounds.size.width - 8,
+                                              self.bounds.size.height - _attributionButton.bounds.size.height - 8,
                                               _attributionButton.bounds.size.width,
                                               _attributionButton.bounds.size.height);
         [self addSubview:_attributionButton];

@@ -7,8 +7,8 @@ PODS:
     - JRSwizzle (~> 1.0)
   - JRSwizzle (1.0)
   - SMCalloutView (1.1)
-  - sqlite3/common (3.8.4.3)
-  - sqlite3/fts (3.8.4.3):
+  - sqlite3/common (3.8.6)
+  - sqlite3/fts (3.8.6):
     - sqlite3/common
 
 DEPENDENCIES:
@@ -21,6 +21,6 @@ SPEC CHECKSUMS:
   GRMustache: ab96109b7ba4b9568425bea40d6cd2cdc7582b6c
   JRSwizzle: 30da7a2c539a4ebf954b16d15f6dd8221c9f6fa5
   SMCalloutView: b1c20930f57bc4470f5477979e2decf066397c82
-  sqlite3: c532f3365dec0925d3f6408c39b27e3c17960b3c
+  sqlite3: 170bf094e597765aaa5d3d312a7b222a6f8ab6f0
 
 COCOAPODS: 0.33.1
