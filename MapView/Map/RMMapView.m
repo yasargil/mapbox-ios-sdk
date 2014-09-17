@@ -3422,8 +3422,9 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
 
         self.userLocation = [RMUserLocation annotationWithMapView:self coordinate:CLLocationCoordinate2DMake(MAXFLOAT, MAXFLOAT) andTitle:nil];
 
-        _locationManager = [CLLocationManager new];
-
+        if (!_locationManager) {
+            _locationManager = [CLLocationManager new];
+        }
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
         // enable iOS 8+ location authorization API
         //
