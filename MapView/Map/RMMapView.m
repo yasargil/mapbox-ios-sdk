@@ -3048,6 +3048,7 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
     }
     else
     {
+        [CATransaction setAnimationDuration:0.0];
         [CATransaction setDisableActions:YES];
     }
 
