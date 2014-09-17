@@ -3444,7 +3444,6 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
         [_locationManager stopUpdatingLocation];
         [_locationManager stopUpdatingHeading];
         _locationManager.delegate = nil;
-         _locationManager = nil;
 
         if (_delegateHasDidStopLocatingUser)
             [_delegate mapViewDidStopLocatingUser:self];
