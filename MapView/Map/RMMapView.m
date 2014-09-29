@@ -2576,6 +2576,9 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
 
     if (newMinZoom < 0.0)
         newMinZoom = 0.0;
+    
+    if (isinf(newMinZoom))
+        newMinZoom = 0.0;
 
     _minZoom = newMinZoom;
 
