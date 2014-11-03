@@ -3438,6 +3438,10 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
         }
 #endif
 
+        if (_locationManager.location) {
+            self.userLocation.location = _locationManager.location;
+        }
+        
         _locationManager.headingFilter = 5.0;
         _locationManager.delegate = self;
         [_locationManager startUpdatingLocation];
