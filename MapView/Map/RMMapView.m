@@ -290,9 +290,9 @@
 
     _zoomDelegateQueue = [NSOperationQueue new];
     [_zoomDelegateQueue setMaxConcurrentOperationCount:1];
-
-    [self setTileCache:[RMTileCache new]];
-
+    if (!self.tileCache) {
+        [self setTileCache:[RMTileCache new]];
+    }
     if (backgroundImage)
     {
         [self setBackgroundView:[[UIView alloc] initWithFrame:[self bounds]]];
@@ -3302,7 +3302,6 @@ __x > __high ? __high : (__x < __low ? __low : __x);\
             [annotation.layer setHidden:NO];
         }
     }
-    NSLog(@"Zoom %f",self.zoom);
 }
 
 - (NSArray *)annotations
