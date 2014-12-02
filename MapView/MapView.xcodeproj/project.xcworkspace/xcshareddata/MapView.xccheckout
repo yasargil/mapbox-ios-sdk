@@ -10,29 +10,29 @@
 	<string>MapView</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
-		<key>CC4409F7-0845-44B7-8F5F-06B5D554C0B5</key>
+		<key>D2343A3007C64EB665FE967B12B8E23F14C116CD</key>
 		<string>https://github.com/yasargil/mapbox-ios-sdk.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>MapView/MapView.xcodeproj/project.xcworkspace</string>
+	<string>MapView/MapView.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
-		<key>CC4409F7-0845-44B7-8F5F-06B5D554C0B5</key>
+		<key>D2343A3007C64EB665FE967B12B8E23F14C116CD</key>
 		<string>../../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>https://github.com/yasargil/mapbox-ios-sdk.git</string>
 	<key>IDESourceControlProjectVersion</key>
-	<integer>110</integer>
+	<integer>111</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>CC4409F7-0845-44B7-8F5F-06B5D554C0B5</string>
+	<string>D2343A3007C64EB665FE967B12B8E23F14C116CD</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>CC4409F7-0845-44B7-8F5F-06B5D554C0B5</string>
+			<string>D2343A3007C64EB665FE967B12B8E23F14C116CD</string>
 			<key>IDESourceControlWCCName</key>
 			<string>mapbox-ios-sdk</string>
 		</dict>
