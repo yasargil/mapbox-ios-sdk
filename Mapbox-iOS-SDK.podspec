@@ -13,8 +13,8 @@ Pod::Spec.new do |m|
 
   m.source = { :git => 'https://github.com/yasargil/mapbox-ios-sdk.git', :tag => m.version.to_s }
 
-  m.platform              = :ios
-  m.ios.deployment_target = '5.0'
+  m.platform              = :ios, '6.0'
+  m.ios.deployment_target = '6.0'
 
   m.source_files = 'Proj4/*.h', 'MapView/Map/*.{h,c,m}'
 
